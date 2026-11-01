@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#451a03">
+    <link rel="manifest" href="manifest.json">
     <title>ប្រព័ន្ធគ្រប់គ្រងហាងកាហ្វេអាជីព (Café POS & Management)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -19,6 +21,8 @@
             body.print-receipt #printable-receipt { position: absolute; left: 0; top: 0; width: 80mm; }
             body.print-zreport #printable-zreport { display: block !important; position: absolute; left: 0; top: 0; width: 80mm; }
             body.print-zreport #printable-zreport, body.print-zreport #printable-zreport * { visibility: visible; }
+            body.print-ticket #printable-ticket { display: block !important; position: absolute; left: 0; top: 0; width: 80mm; }
+            body.print-ticket #printable-ticket, body.print-ticket #printable-ticket * { visibility: visible; }
         }
     </style>
 </head>
@@ -118,12 +122,12 @@
                     </button>
                 </div>
                 <div id="table-grid" class="p-3 bg-slate-100 border-b border-slate-200 flex gap-2 overflow-x-auto"></div>
-                <div class="p-2.5 bg-white border-b border-slate-100 flex gap-1.5 overflow-x-auto">
-                    <button onclick="filterCategory('all', this)" class="cat-btn bg-amber-800 text-white px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shadow-sm">ទាំងអស់</button>
-                    <button onclick="filterCategory('coffee', this)" class="cat-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap">កាហ្វេ</button>
-                    <button onclick="filterCategory('tea', this)" class="cat-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap">តែ & ភេសជ្ជៈ</button>
-                    <button onclick="filterCategory('frappe', this)" class="cat-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap">ក្រឡុក</button>
-                    <button onclick="filterCategory('bakery', this)" class="cat-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap">នំ & អាហារសម្រន់</button>
+                <div class="p-2.5 bg-white border-b border-slate-100 flex gap-2 items-center">
+                    <div class="relative flex-none">
+                        <i class="fa-solid fa-magnifying-glass absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
+                        <input id="menu-search" oninput="renderPosMenu()" placeholder="ស្វែងរក..." class="pl-6 pr-2 py-1 w-28 sm:w-36 border border-slate-300 rounded-lg text-xs outline-none focus:ring-1 focus:ring-amber-600">
+                    </div>
+                    <div id="category-bar" class="flex gap-1.5 overflow-x-auto"></div>
                 </div>
                 <div id="pos-menu-grid" class="flex-1 p-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 overflow-y-auto content-start"></div>
             </div>
@@ -134,9 +138,14 @@
                         <h2 class="font-bold text-slate-800 text-sm flex items-center gap-1.5"><i class="fa-solid fa-receipt text-amber-800"></i> បញ្ជីកុម្ម៉ង់</h2>
                         <span id="cart-order-type" class="text-[10px] text-slate-500 font-semibold">Dine-In</span>
                     </div>
-                    <button onclick="clearCurrentCart()" class="text-xs text-rose-600 hover:text-rose-800 font-semibold flex items-center gap-1">
-                        <i class="fa-solid fa-trash-can"></i> សំអាត
-                    </button>
+                    <div class="flex items-center gap-3">
+                        <button onclick="printOrderTicket(false)" class="text-xs text-slate-600 hover:text-slate-900 font-semibold flex items-center gap-1" title="បោះពុម្ព Ticket ឲ្យ Barista">
+                            <i class="fa-solid fa-ticket"></i> Ticket
+                        </button>
+                        <button onclick="clearCurrentCart()" class="text-xs text-rose-600 hover:text-rose-800 font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-trash-can"></i> សំអាត
+                        </button>
+                    </div>
                 </div>
 
                 <div class="flex-1 overflow-y-auto p-2 min-h-[120px]">
@@ -155,6 +164,7 @@
                             <option value="5">បុគ្គលិក (5%)</option>
                             <option value="10">សមាជិក VIP (10%)</option>
                             <option value="15">ការផ្សព្វផ្សាយ (15%)</option>
+                            <option value="custom">ផ្សេងៗ (បញ្ចូល %)...</option>
                         </select>
                     </div>
 
@@ -208,12 +218,13 @@
                 </div>
                 <div id="low-stock-banner" class="hidden bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold p-3 rounded-xl"></div>
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
-                    <table class="w-full text-left text-xs min-w-[760px]">
+                    <table class="w-full text-left text-xs min-w-[920px]">
                         <thead class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
                             <tr>
                                 <th class="p-3 text-center">ល.រ</th><th class="p-3">ឈ្មោះ</th><th class="p-3 text-center">ខ្នាត</th>
                                 <th class="p-3 text-center">ស្តុកចូលសរុប</th><th class="p-3 text-center">ប្រើប្រាស់ (-)</th>
-                                <th class="p-3 text-center">ស្តុកបច្ចុប្បន្ន</th><th class="p-3 text-center">Alert</th><th class="p-3 text-center">សកម្មភាព</th>
+                                <th class="p-3 text-center">ស្តុកបច្ចុប្បន្ន</th><th class="p-3 text-center">Alert</th>
+                                <th class="p-3 text-center">ថ្លៃដើម/ខ្នាត</th><th class="p-3 text-center">តម្លៃស្តុក</th><th class="p-3 text-center">សកម្មភាព</th>
                             </tr>
                         </thead>
                         <tbody id="raw-inventory-tbody" class="divide-y divide-slate-200 text-slate-700"></tbody>
@@ -289,6 +300,18 @@
                         <div class="bg-amber-50 p-3 rounded-lg border border-amber-200"><span class="text-amber-800 block">ត្រូវមានក្នុងថត:</span><strong id="shift-expected-cash" class="text-base text-amber-900">$0.00</strong></div>
                     </div>
 
+                    <div class="border-t border-slate-200 pt-4 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <h4 class="font-bold text-xs text-slate-700">ចំណាយពីថត (Cash Out) <span id="shift-expense-total" class="text-rose-600">$0.00</span></h4>
+                        </div>
+                        <div class="grid grid-cols-12 gap-2 text-xs">
+                            <input id="exp-amount" type="number" min="0" step="0.25" placeholder="$" class="col-span-3 p-2 border border-slate-300 rounded-lg outline-none font-bold">
+                            <input id="exp-reason" maxlength="60" placeholder="មូលហេតុ (ឧ. ទិញទឹកកក, ទឹកដោះគោ)" class="col-span-6 p-2 border border-slate-300 rounded-lg outline-none">
+                            <button onclick="addExpense()" class="col-span-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg"><i class="fa-solid fa-minus"></i> ដកចេញ</button>
+                        </div>
+                        <div id="shift-expense-list" class="text-xs divide-y divide-slate-100"></div>
+                    </div>
+
                     <div class="border-t border-slate-200 pt-4 space-y-3">
                         <h4 class="font-bold text-xs text-slate-700">រាប់សាច់ប្រាក់ជាក់ស្តែងក្នុងថត:</h4>
                         <div class="grid grid-cols-3 gap-3 text-xs">
@@ -339,12 +362,36 @@
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><p class="text-[11px] text-slate-500 font-semibold">វិក្កយបត្រ</p><h3 id="ana-total-bills" class="text-xl font-bold text-slate-800">0</h3></div>
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><p class="text-[11px] text-slate-500 font-semibold">មធ្យម/វិក្កយបត្រ</p><h3 id="ana-avg-bill" class="text-xl font-bold text-slate-800">$0.00</h3></div>
                 </div>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><p class="text-[11px] text-slate-500 font-semibold">ថ្លៃដើម (COGS)</p><h3 id="ana-cogs" class="text-xl font-bold text-rose-700">$0.00</h3><p id="ana-cogs-note" class="text-[10px] text-slate-400"></p></div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><p class="text-[11px] text-slate-500 font-semibold">ប្រាក់ចំណេញដុល (Gross Profit)</p><h3 id="ana-profit" class="text-xl font-bold text-emerald-700">$0.00</h3><p id="ana-margin" class="text-[11px] font-bold text-emerald-600">0%</p></div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><p class="text-[11px] text-slate-500 font-semibold">បញ្ចុះតម្លៃ</p><h3 id="ana-discount" class="text-xl font-bold text-amber-700">$0.00</h3></div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><p class="text-[11px] text-slate-500 font-semibold">Void វិក្កយបត្រ</p><h3 id="ana-voids" class="text-xl font-bold text-rose-600">0</h3></div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm lg:col-span-2">
+                        <h3 class="text-xs font-bold text-slate-700 mb-3">ការលក់តាមម៉ោង (រកម៉ោងមមាញឹក)</h3>
+                        <div class="h-56 w-full relative"><canvas id="analyticsHourChart"></canvas></div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="text-xs font-bold text-slate-700 mb-3">វិធីទូទាត់ (Payment Mix)</h3>
+                        <div id="ana-paymix" class="space-y-2.5 text-xs"></div>
+                    </div>
+                </div>
                 <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                     <h3 class="text-xs font-bold text-slate-700 mb-3">ប្រជាប្រិយភាពមុខទំនិញ</h3>
                     <div class="h-64 w-full relative">
                         <canvas id="analyticsBarChart"></canvas>
                         <p id="ana-empty" class="hidden absolute inset-0 items-center justify-center text-xs text-slate-400">គ្មានការលក់ក្នុងចន្លោះពេលនេះទេ</p>
                     </div>
+                </div>
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+                    <table class="w-full text-left text-xs min-w-[600px]">
+                        <thead class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
+                            <tr><th class="p-3">មុខទំនិញ</th><th class="p-3 text-right">ចំនួន</th><th class="p-3 text-right">ចំណូល</th><th class="p-3 text-right">ថ្លៃដើម</th><th class="p-3 text-right">ចំណេញ</th><th class="p-3 text-right">Margin</th></tr>
+                        </thead>
+                        <tbody id="ana-items-tbody" class="divide-y divide-slate-100"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -384,6 +431,7 @@
                             <div><label class="block font-semibold text-slate-600 mb-0.5">អត្រាប្តូរ ($1 = ? ៛)</label><input id="set-rate" type="number" step="10" class="w-full p-2 border rounded-lg outline-none"></div>
                         </div>
                         <div><label class="block font-semibold text-slate-600 mb-0.5">សារខាងក្រោមវិក្កយបត្រ</label><input id="set-footer" class="w-full p-2 border rounded-lg outline-none"></div>
+                        <label class="flex items-center gap-2 font-semibold text-slate-600"><input id="set-auto-ticket" type="checkbox" class="accent-amber-800"> បោះពុម្ព Ticket ឲ្យ Barista ស្វ័យប្រវត្តិ ពេលចុច "បញ្ជូន"</label>
                         <button onclick="saveShopSettings()" class="bg-amber-800 hover:bg-amber-900 text-white font-bold px-4 py-2 rounded-lg"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុក</button>
                     </div>
 
@@ -521,7 +569,25 @@
                         <div id="custom-topping-list" class="space-y-1.5"></div>
                     </div>
                 </div>
-                <p id="custom-bakery-note" class="hidden text-slate-500">មុខទំនិញនេះមិនមានជម្រើសកែសម្រួលទេ។</p>
+                <p id="custom-bakery-note" class="hidden text-slate-500">មុខទំនិញនេះមិនមានជម្រើសទំហំ/ស្ករ/ទឹកកកទេ។</p>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">ចំណាំ (ស្រេចចិត្ត)</label>
+                    <input id="custom-note" maxlength="80" placeholder="ឧ. ទឹកដោះគោតិច, ដាក់កែវក្តៅ..." class="w-full p-2 border rounded-lg outline-none">
+                    <div class="flex gap-1.5 flex-wrap mt-1.5">
+                        <button type="button" onclick="appendNote('ទឹកដោះគោតិច')" class="px-2 py-0.5 bg-slate-100 rounded text-[10px]">ទឹកដោះគោតិច</button>
+                        <button type="button" onclick="appendNote('ខ្លាំង')" class="px-2 py-0.5 bg-slate-100 rounded text-[10px]">ខ្លាំង</button>
+                        <button type="button" onclick="appendNote('ក្តៅ')" class="px-2 py-0.5 bg-slate-100 rounded text-[10px]">ក្តៅ</button>
+                        <button type="button" onclick="appendNote('ញែកទឹកកក')" class="px-2 py-0.5 bg-slate-100 rounded text-[10px]">ញែកទឹកកក</button>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <label class="font-bold text-slate-700">ចំនួន</label>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="stepCustomQty(-1)" class="w-7 h-7 bg-slate-200 rounded font-bold">-</button>
+                        <span id="custom-qty" class="font-bold w-6 text-center">1</span>
+                        <button type="button" onclick="stepCustomQty(1)" class="w-7 h-7 bg-slate-200 rounded font-bold">+</button>
+                    </div>
+                </div>
             </div>
             <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 flex justify-end gap-2">
                 <button onclick="closeModal('modal-customization')" class="px-4 py-2 text-xs font-semibold bg-slate-200 rounded-lg">បោះបង់</button>
@@ -601,6 +667,7 @@
     </div>
 
     <div id="printable-zreport" class="hidden p-4 bg-white text-slate-900 text-[11px] font-mono leading-tight"></div>
+    <div id="printable-ticket" class="hidden p-3 bg-white text-slate-900 text-[12px] font-mono leading-tight"></div>
 
     <!-- ================= MODAL: Table transfer ================= -->
     <div id="modal-table-transfer" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 p-4">
@@ -653,7 +720,7 @@
                 <input type="hidden" id="menu-edit-id">
                 <div><label class="block font-bold text-slate-700 mb-1">ឈ្មោះមុខម្ហូប *</label><input type="text" id="menu-name" placeholder="ឧ. កាពូជីណូ (Cappuccino)" class="w-full p-2 border rounded-lg outline-none"></div>
                 <div class="grid grid-cols-3 gap-2">
-                    <div><label class="block font-bold text-slate-700 mb-1">ប្រភេទ</label><select id="menu-category" class="w-full p-2 border rounded-lg outline-none"><option value="coffee">Coffee</option><option value="tea">Tea</option><option value="frappe">Frappe</option><option value="bakery">Bakery</option></select></div>
+                    <div><label class="block font-bold text-slate-700 mb-1">ប្រភេទ</label><input id="menu-category" list="menu-category-list" placeholder="coffee" class="w-full p-2 border rounded-lg outline-none"><datalist id="menu-category-list"></datalist></div>
                     <div><label class="block font-bold text-slate-700 mb-1">តម្លៃ ($) *</label><input type="number" id="menu-price" min="0" step="0.05" class="w-full p-2 border rounded-lg outline-none"></div>
                     <div><label class="block font-bold text-slate-700 mb-1">Icon</label><select id="menu-icon" class="w-full p-2 border rounded-lg outline-none"><option value="fa-mug-hot">Hot cup</option><option value="fa-mug-saucer">Mug</option><option value="fa-glass-water">Glass</option><option value="fa-blender">Blender</option><option value="fa-bread-slice">Bread</option><option value="fa-cookie">Cookie</option><option value="fa-ice-cream">Ice cream</option></select></div>
                 </div>
@@ -673,7 +740,10 @@
                         <button type="button" onclick="addRecipeRow()" class="text-amber-800 font-bold"><i class="fa-solid fa-plus"></i> បន្ថែម</button>
                     </div>
                     <div id="recipe-rows" class="space-y-1.5"></div>
+                    <p id="menu-cost-preview" class="mt-1.5 text-[11px] text-slate-500"></p>
                 </div>
+                <label class="flex items-center gap-2 font-semibold text-slate-700"><input id="menu-no-options" type="checkbox" class="accent-amber-800"> គ្មានជម្រើសទំហំ/ស្ករ/ទឹកកក (ឧ. នំ, ទឹកសុទ្ធ)</label>
+                <label class="flex items-center gap-2 font-semibold text-slate-700"><input id="menu-sold-out" type="checkbox" class="accent-rose-600"> អស់ពីស្តុក (Sold out) — លាក់ពីការលក់បណ្តោះអាសន្ន</label>
             </div>
             <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 flex gap-2">
                 <button onclick="closeModal('modal-menu')" class="flex-1 py-2 text-xs font-semibold bg-slate-200 rounded-lg">បោះបង់</button>
@@ -742,6 +812,9 @@
             defaultFloat: 50,
             largeExtra: 0.5,
             largeFactor: 1.3,
+            autoTicket: false,
+            // Unit cost per ingredient (USD per unit), keyed by rawId — kept in settings so it syncs via config
+            costs: {},
             toppings: [
                 { id: 1, name: "Extra Espresso Shot", price: 0.5, rawId: 1, qty: 18 },
                 { id: 2, name: "Grass Jelly / ថចោរ", price: 0.5, rawId: null, qty: 0 },
@@ -773,7 +846,7 @@
         let shiftState = null, shiftReports = [];
         let activeTableId = "T1", activeCategory = "all", selectedPaymentMethod = "cash";
         let selectedSugar = "50%", selectedIce = "Normal Ice";
-        let activeTimeframe = "daily", analyticsChart = null, pinBuffer = "", menuImageData = null;
+        let activeTimeframe = "daily", analyticsChart = null, analyticsHourChart = null, pinBuffer = "", menuImageData = null;
 
         // ==================== HELPERS ====================
         function esc(str) {
@@ -874,6 +947,8 @@
                 if (typeof r.initialStock !== 'number') r.initialStock = r.stock + r.used;
             });
             menuItems.forEach(m => { if (!Array.isArray(m.recipe)) m.recipe = []; });
+            if (!settings.costs || typeof settings.costs !== 'object') settings.costs = {};
+            if (!Array.isArray(shiftState.expenses)) shiftState.expenses = [];
 
             saveJSON('cafe_settings', settings);
             saveJSON('cafe_staff', staff);
@@ -883,12 +958,43 @@
         }
 
         function initTables() {
-            ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12", "Takeaway"].forEach(id => {
+            ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"].forEach(id => {
                 if (!tablesState[id]) {
-                    tablesState[id] = { id, name: id === "Takeaway" ? "ខ្ចប់ (Takeaway)" : `តុ ${id.replace('T', '')}`, status: "available", cart: [], discount: 0 };
+                    tablesState[id] = { id, name: `តុ ${id.replace('T', '')}`, status: "available", cart: [], discount: 0 };
                 }
             });
+            // Old single "Takeaway" slot: keep only while it still holds an order
+            Object.keys(tablesState).forEach(id => { if (isTakeaway(id) && !tablesState[id].cart.length) delete tablesState[id]; });
             saveTablesState();
+        }
+
+        // ==================== TAKEAWAY TICKETS (queue numbers) ====================
+        function isTakeaway(id) { return id === 'Takeaway' || String(id).startsWith('TA'); }
+        function nextQueueNo() {
+            const today = new Date().toLocaleDateString('en-CA');
+            const q = loadJSON('cafe_queue', {});
+            const n = q.date === today ? (q.n || 0) + 1 : 1;
+            saveJSON('cafe_queue', { date: today, n });
+            return n;
+        }
+        function newTakeaway() {
+            const n = nextQueueNo();
+            const id = `TA${Date.now()}`;
+            tablesState[id] = { id, name: `ខ្ចប់ #${n}`, queueNo: n, status: "available", cart: [], discount: 0, createdAt: new Date().toISOString() };
+            saveTablesState();
+            selectTable(id);
+            showToast(`បង្កើតការកុម្ម៉ង់ខ្ចប់ #${n}`, "info");
+        }
+        // Remove an empty takeaway ticket and move to the next useful slot
+        function dropTakeawayIfEmpty(tbl) {
+            if (!tbl || !isTakeaway(tbl.id) || tbl.cart.length) return false;
+            delete tablesState[tbl.id];
+            saveTablesState();
+            if (activeTableId === tbl.id) {
+                const otherTa = Object.values(tablesState).find(t => isTakeaway(t.id));
+                activeTableId = otherTa ? otherTa.id : 'T1';
+            }
+            return true;
         }
 
         function saveTablesState() { saveJSON('cafe_tables_state', tablesState); }
@@ -1033,6 +1139,7 @@
             document.getElementById('set-phone').value = settings.phone;
             document.getElementById('set-rate').value = settings.rate;
             document.getElementById('set-footer').value = settings.footer;
+            document.getElementById('set-auto-ticket').checked = !!settings.autoTicket;
             document.getElementById('set-large-extra').value = settings.largeExtra;
             document.getElementById('set-large-factor').value = settings.largeFactor;
             document.getElementById('topping-rows').innerHTML = '';
@@ -1048,7 +1155,8 @@
                 address: document.getElementById('set-address').value.trim(),
                 phone: document.getElementById('set-phone').value.trim(),
                 rate: Math.round(r),
-                footer: document.getElementById('set-footer').value.trim()
+                footer: document.getElementById('set-footer').value.trim(),
+                autoTicket: document.getElementById('set-auto-ticket').checked
             });
             saveJSON('cafe_settings', settings);
             pushConfig('settings');
@@ -1217,7 +1325,13 @@
         function renderTableGrid() {
             const grid = document.getElementById('table-grid');
             grid.innerHTML = '';
-            Object.values(tablesState).forEach(tbl => {
+            const add = document.createElement('button');
+            add.onclick = newTakeaway;
+            add.className = 'px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 shadow-sm border border-dashed border-amber-700 bg-amber-50 text-amber-900 hover:bg-amber-100';
+            add.innerHTML = '<i class="fa-solid fa-plus"></i><i class="fa-solid fa-bag-shopping"></i><span>ខ្ចប់ថ្មី</span>';
+            grid.appendChild(add);
+            const list = Object.values(tablesState).sort((a, b) => (isTakeaway(b.id) - isTakeaway(a.id)) || 0);
+            list.forEach(tbl => {
                 const isOccupied = tbl.cart.length > 0;
                 const isActive = tbl.id === activeTableId;
                 const btn = document.createElement('button');
@@ -1225,7 +1339,7 @@
                 btn.className = `px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 shadow-sm border ${
                     isActive ? 'border-amber-900 bg-amber-900 text-white ring-2 ring-amber-600' :
                     (isOccupied ? 'border-rose-300 bg-rose-50 text-rose-800' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50')}`;
-                btn.innerHTML = `<i class="fa-solid ${tbl.id === 'Takeaway' ? 'fa-bag-shopping' : 'fa-chair'}"></i><span>${esc(tbl.name)}</span>${isOccupied ? '<span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>' : ''}`;
+                btn.innerHTML = `<i class="fa-solid ${isTakeaway(tbl.id) ? 'fa-bag-shopping' : 'fa-chair'}"></i><span>${esc(tbl.name)}</span>${isOccupied ? '<span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>' : ''}`;
                 grid.appendChild(btn);
             });
         }
@@ -1236,37 +1350,67 @@
         }
         function selectTable(id) {
             const prev = tablesState[activeTableId];
-            if (prev && prev.id !== id && markSent(prev)) saveTablesState();
+            if (prev && prev.id !== id) {
+                if (markSent(prev)) saveTablesState();
+                dropTakeawayIfEmpty(prev);
+            }
+            if (!tablesState[id]) id = 'T1';
             activeTableId = id;
             const tbl = tablesState[id];
             document.getElementById('selected-table-label').innerText = tbl.name;
-            document.getElementById('cart-order-type').innerText = id === 'Takeaway' ? 'Takeaway (ខ្ចប់)' : 'Dine-In (ញ៉ាំក្នុងហាង)';
-            document.getElementById('discount-select').value = tbl.discount || 0;
+            document.getElementById('cart-order-type').innerText = isTakeaway(id) ? 'Takeaway (ខ្ចប់)' : 'Dine-In (ញ៉ាំក្នុងហាង)';
+            setDiscountSelect(tbl.discount || 0);
             document.getElementById('cash-received-usd').value = '';
             document.getElementById('cash-received-khr').value = '';
             renderTableGrid();
             renderCart();
         }
-        function filterCategory(cat, btnEl) {
+        const CATEGORY_LABELS = { coffee: 'កាហ្វេ', tea: 'តែ & ភេសជ្ជៈ', frappe: 'ក្រឡុក', bakery: 'នំ & អាហារសម្រន់' };
+        function catLabel(c) { return CATEGORY_LABELS[c] || c; }
+        function menuCategories() { return [...new Set(menuItems.map(m => m.category).filter(Boolean))]; }
+        function renderCategoryBar() {
+            const cats = menuCategories();
+            if (activeCategory !== 'all' && !cats.includes(activeCategory)) activeCategory = 'all';
+            document.getElementById('category-bar').innerHTML = ['all', ...cats].map(c => {
+                const on = c === activeCategory;
+                return `<button data-cat="${esc(c)}" onclick="filterCategory(this.dataset.cat)" class="cat-btn ${on ? 'bg-amber-800 text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'} px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap">${c === 'all' ? 'ទាំងអស់' : esc(catLabel(c))}</button>`;
+            }).join('');
+        }
+        function filterCategory(cat) {
             activeCategory = cat;
-            document.querySelectorAll('.cat-btn').forEach(b => { b.classList.remove('bg-amber-800', 'text-white', 'shadow-sm'); b.classList.add('bg-slate-100', 'text-slate-700'); });
-            btnEl.classList.remove('bg-slate-100', 'text-slate-700');
-            btnEl.classList.add('bg-amber-800', 'text-white', 'shadow-sm');
             renderPosMenu();
         }
+        // How many of this item can be made from current stock (Infinity if no recipe)
+        function makeableCount(item) {
+            let n = Infinity;
+            item.recipe.forEach(ing => {
+                const raw = rawInventory.find(r => r.id === ing.rawId);
+                if (raw && ing.qty > 0) n = Math.min(n, Math.floor(raw.stock / ing.qty));
+            });
+            return n;
+        }
+        function hasOptions(item) { return item.noOptions !== undefined ? !item.noOptions : item.category !== 'bakery'; }
         function renderPosMenu() {
+            renderCategoryBar();
             const grid = document.getElementById('pos-menu-grid');
             grid.innerHTML = '';
-            const filtered = activeCategory === 'all' ? menuItems : menuItems.filter(i => i.category === activeCategory);
-            if (!filtered.length) { grid.innerHTML = '<p class="col-span-full text-center text-xs text-slate-400 py-10">គ្មានមុខម្ហូបក្នុងប្រភេទនេះទេ</p>'; return; }
+            const q = (document.getElementById('menu-search').value || '').trim().toLowerCase();
+            const filtered = menuItems
+                .filter(i => activeCategory === 'all' || i.category === activeCategory)
+                .filter(i => !q || i.name.toLowerCase().includes(q));
+            if (!filtered.length) { grid.innerHTML = '<p class="col-span-full text-center text-xs text-slate-400 py-10">រកមិនឃើញមុខម្ហូប</p>'; return; }
             filtered.forEach(item => {
                 const card = document.createElement('div');
-                card.onclick = () => openCustomizationModal(item.id);
-                card.className = "bg-white border border-slate-200 rounded-xl p-2.5 flex flex-col justify-between hover:border-amber-700 hover:shadow-md transition cursor-pointer";
+                const can = makeableCount(item);
+                const soldOut = !!item.soldOut;
+                card.onclick = () => { if (soldOut) { showToast(`${item.name} អស់ពីស្តុក`, "warning"); return; } openCustomizationModal(item.id); };
+                card.className = `relative bg-white border border-slate-200 rounded-xl p-2.5 flex flex-col justify-between transition ${soldOut ? 'opacity-50 cursor-not-allowed' : 'hover:border-amber-700 hover:shadow-md cursor-pointer'}`;
+                const badge = soldOut ? '<span class="absolute top-2 left-2 z-10 bg-rose-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">អស់</span>'
+                    : (can < 5 ? `<span class="absolute top-2 left-2 z-10 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded" title="ផ្អែកលើស្តុកវត្ថុធាតុដើម">${can <= 0 ? 'ស្តុកខ្វះ' : 'នៅ ' + can}</span>` : '');
                 const header = item.image
-                    ? `<div class="relative mb-2 -mx-1 -mt-1"><img src="${item.image}" alt="" class="w-full aspect-[4/3] object-cover rounded-lg bg-slate-100"><span class="absolute top-1 right-1 text-[10px] bg-white/90 text-slate-700 font-bold px-1.5 py-0.5 rounded">${esc(item.category)}</span></div>`
-                    : `<div class="flex justify-between items-start mb-2"><div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-sm"><i class="fa-solid ${esc(item.icon || 'fa-mug-hot')}"></i></div><span class="text-[10px] bg-slate-100 text-slate-600 font-bold px-1.5 py-0.5 rounded">${esc(item.category)}</span></div>`;
-                card.innerHTML = `${header}
+                    ? `<div class="relative mb-2 -mx-1 -mt-1"><img src="${item.image}" alt="" class="w-full aspect-[4/3] object-cover rounded-lg bg-slate-100"><span class="absolute top-1 right-1 text-[10px] bg-white/90 text-slate-700 font-bold px-1.5 py-0.5 rounded">${esc(catLabel(item.category))}</span></div>`
+                    : `<div class="flex justify-between items-start mb-2"><div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-sm"><i class="fa-solid ${esc(item.icon || 'fa-mug-hot')}"></i></div><span class="text-[10px] bg-slate-100 text-slate-600 font-bold px-1.5 py-0.5 rounded">${esc(catLabel(item.category))}</span></div>`;
+                card.innerHTML = `${badge}${header}
                     <div>
                         <h4 class="font-bold text-slate-800 text-xs leading-tight mb-1 line-clamp-2">${esc(item.name)}</h4>
                         <div class="flex justify-between items-end">
@@ -1288,7 +1432,9 @@
             if (!item) return;
             document.getElementById('custom-item-id').value = item.id;
             document.getElementById('custom-modal-title').innerText = `កែសម្រួល៖ ${item.name}`;
-            const isBakery = item.category === 'bakery';
+            document.getElementById('custom-note').value = '';
+            document.getElementById('custom-qty').innerText = '1';
+            const isBakery = !hasOptions(item);
             document.getElementById('custom-drink-options').classList.toggle('hidden', isBakery);
             document.getElementById('custom-bakery-note').classList.toggle('hidden', !isBakery);
             selectedSugar = "50%"; selectedIce = "Normal Ice";
@@ -1309,10 +1455,20 @@
             if (type === 'sugar') { selectedSugar = val; highlightOption('opt-sugar', val); }
             else { selectedIce = val; highlightOption('opt-ice', val); }
         }
+        function appendNote(t) {
+            const el = document.getElementById('custom-note');
+            el.value = el.value.trim() ? `${el.value.trim()}, ${t}` : t;
+        }
+        function stepCustomQty(d) {
+            const el = document.getElementById('custom-qty');
+            el.innerText = Math.max(1, Math.min(50, (parseInt(el.innerText) || 1) + d));
+        }
         function confirmAddToCart() {
             const item = menuItems.find(i => i.id === parseInt(document.getElementById('custom-item-id').value));
             if (!item) return;
-            const isBakery = item.category === 'bakery';
+            const isBakery = !hasOptions(item);
+            const note = document.getElementById('custom-note').value.trim().slice(0, 80);
+            const qty = Math.max(1, parseInt(document.getElementById('custom-qty').innerText) || 1);
             let size = '-', extra = 0, toppings = [];
             if (!isBakery) {
                 size = document.querySelector('input[name="custom-size"]:checked').value;
@@ -1325,8 +1481,8 @@
             const tbl = tablesState[activeTableId];
             tbl.cart.push({
                 cartUniqueId: Date.now() + Math.floor(Math.random() * 1000),
-                itemId: item.id, name: item.name, unitPrice: round2(item.price + extra), qty: 1,
-                size, sugar: isBakery ? '-' : selectedSugar, ice: isBakery ? '-' : selectedIce, toppings, sent: false
+                itemId: item.id, name: item.name, unitPrice: round2(item.price + extra), qty,
+                size, sugar: isBakery ? '-' : selectedSugar, ice: isBakery ? '-' : selectedIce, toppings, note, sent: false
             });
             tbl.status = "occupied";
             saveTablesState();
@@ -1350,6 +1506,7 @@
                         <span class="text-amber-800 whitespace-nowrap">${fmtUSD(ci.unitPrice * ci.qty)}</span>
                     </div>
                     ${isBakery ? '' : `<div class="text-[10px] text-slate-500 space-x-2"><span>ស្ករ: ${esc(ci.sugar)}</span><span>ទឹកកក: ${esc(ci.ice)}</span>${ci.toppings.length ? `<span class="text-amber-700">+${esc(ci.toppings.map(toppingName).join(', '))}</span>` : ''}</div>`}
+                    ${ci.note ? `<div class="text-[10px] text-sky-700 font-semibold"><i class="fa-solid fa-note-sticky"></i> ${esc(ci.note)}</div>` : ''}
                     <div class="flex justify-between items-center pt-1 border-t border-slate-200">
                         <div class="flex items-center gap-1.5">
                             <button onclick="changeCartQty(${ci.cartUniqueId}, -1)" class="w-6 h-6 bg-slate-200 hover:bg-slate-300 rounded font-bold">-</button>
@@ -1366,9 +1523,21 @@
         function afterCartChange(tbl) {
             if (!tbl.cart.length) { tbl.status = "available"; tbl.discount = 0; tbl.discountBy = null; }
             saveTablesState();
-            if (tbl.id === activeTableId) document.getElementById('discount-select').value = tbl.discount || 0;
+            if (dropTakeawayIfEmpty(tbl)) { selectTable(activeTableId); return; }
+            if (tbl.id === activeTableId) setDiscountSelect(tbl.discount || 0);
             renderTableGrid();
             renderCart();
+        }
+        // Shows the table's discount in the select, adding a custom % option when needed
+        function setDiscountSelect(v) {
+            const sel = document.getElementById('discount-select');
+            sel.querySelectorAll('option[data-custom]').forEach(o => o.remove());
+            if (v && ![...sel.options].some(o => o.value === String(v))) {
+                const o = document.createElement('option');
+                o.value = String(v); o.dataset.custom = '1'; o.textContent = `បញ្ចុះ ${v}%`;
+                sel.insertBefore(o, sel.querySelector('option[value="custom"]'));
+            }
+            sel.value = String(v || 0);
         }
         async function changeCartQty(cartId, delta) {
             const tbl = tablesState[activeTableId];
@@ -1415,14 +1584,24 @@
         async function onDiscountChange() {
             const sel = document.getElementById('discount-select');
             const tbl = tablesState[activeTableId];
-            const v = parseFloat(sel.value) || 0;
+            let v = parseFloat(sel.value) || 0;
+            if (sel.value === 'custom') {
+                const input = prompt('បញ្ចូលភាគរយបញ្ចុះតម្លៃ (1-100):', '20');
+                const n = parseFloat(input);
+                if (input === null || isNaN(n) || n <= 0 || n > 100) {
+                    if (input !== null) showToast("ភាគរយមិនត្រឹមត្រូវ", "warning");
+                    setDiscountSelect(tbl.discount || 0); return;
+                }
+                v = round2(n);
+            }
             if (v > 0) {
                 const ok = await askManager({ title: `អនុម័តបញ្ចុះតម្លៃ ${v}% (${tbl.name})` });
-                if (!ok) { sel.value = tbl.discount || 0; return; }
+                if (!ok) { setDiscountSelect(tbl.discount || 0); return; }
                 tbl.discountBy = ok.manager.name;
             } else tbl.discountBy = null;
             tbl.discount = v;
             saveTablesState();
+            setDiscountSelect(v);
             calculateCartTotals();
         }
         function calculateCartTotals() {
@@ -1468,10 +1647,32 @@
         function holdTableOrder() {
             const tbl = tablesState[activeTableId];
             if (!tbl.cart.length) { showToast("គ្មានការកុម្ម៉ង់ដើម្បីបញ្ជូនទេ", "warning"); return; }
+            const fresh = tbl.cart.filter(c => !c.sent);
+            if (settings.autoTicket && fresh.length) printOrderTicket(true);
             markSent(tbl);
             saveTablesState();
             renderCart();
             showToast(`បានបញ្ជូនការកុម្ម៉ង់ ${tbl.name}!`, "info");
+        }
+        // Barista / bar ticket: new items only (onlyNew) or the whole order
+        function printOrderTicket(onlyNew) {
+            const tbl = tablesState[activeTableId];
+            let items = tbl.cart.filter(c => !onlyNew || !c.sent);
+            if (!items.length) items = tbl.cart;
+            if (!items.length) { showToast("គ្មានមុខទំនិញសម្រាប់ Ticket", "warning"); return; }
+            const big = isTakeaway(tbl.id) ? `#${tbl.queueNo || ''}` : esc(tbl.name);
+            document.getElementById('printable-ticket').innerHTML = `
+                <div class="text-center border-b border-dashed border-slate-500 pb-1 mb-1">
+                    <div class="text-[10px]">${isTakeaway(tbl.id) ? 'TAKEAWAY / ខ្ចប់' : 'DINE-IN / ញ៉ាំក្នុងហាង'}</div>
+                    <div class="font-bold text-2xl font-sans">${big}</div>
+                    <div class="text-[10px]">${new Date().toLocaleTimeString('en-GB')} • ${esc(currentUser ? currentUser.name : '')}</div>
+                </div>
+                ${items.map(i => `<div class="py-1 border-b border-dotted border-slate-400">
+                    <div class="font-bold">${i.qty} × ${esc(i.name)}${i.size !== '-' ? ` (${esc(i.size)})` : ''}</div>
+                    ${i.size !== '-' ? `<div>ស្ករ ${esc(i.sugar)} • ${esc(i.ice)}</div>` : ''}
+                    ${i.toppings && i.toppings.length ? `<div>+ ${esc(i.toppings.map(toppingName).join(', '))}</div>` : ''}
+                    ${i.note ? `<div class="font-bold">» ${esc(i.note)}</div>` : ''}</div>`).join('')}`;
+            printSection('print-ticket');
         }
         function processTableCheckout() {
             const tbl = tablesState[activeTableId];
@@ -1515,6 +1716,12 @@
             });
             return Object.entries(map).map(([k, v]) => ({ rawId: parseInt(k), qty: round2(v) }));
         }
+        // ==================== COST / PROFIT ====================
+        function unitCost(rawId) { const c = settings.costs && settings.costs[rawId]; return c > 0 ? c : 0; }
+        function costOfConsumption(list) { return round2((list || []).reduce((t, c) => t + c.qty * unitCost(c.rawId), 0)); }
+        function recipeCost(item) { return round2(item.recipe.reduce((t, r) => t + r.qty * unitCost(r.rawId), 0)); }
+        function recipeMissingCost(item) { return item.recipe.some(r => !unitCost(r.rawId)); }
+        function saleCogs(s) { return typeof s.cogs === 'number' ? s.cogs : costOfConsumption(s.consumption); }
 
         function executeFinalPayment(payMethod, ref) {
             const tbl = tablesState[activeTableId];
@@ -1545,6 +1752,8 @@
                 totalUSD, paymentMethod: payMethod, paidUSD, changeUSD,
                 paidCashUSD: cash ? cash.usd : 0, paidCashKHR: cash ? cash.khr : 0,
                 ref: ref || '', rate: rate(), cashierId: currentUser.id, cashierName: currentUser.name,
+                orderType: isTakeaway(tbl.id) ? 'takeaway' : 'dine-in', queueNo: tbl.queueNo || null,
+                cogs: costOfConsumption(computeConsumption(tbl.cart)),
                 consumption, voided: false
             };
             salesHistory.push(sale);
@@ -1557,6 +1766,7 @@
             tbl.discount = 0;
             tbl.discountBy = null;
             saveTablesState();
+            dropTakeawayIfEmpty(tbl);
             selectTable(activeTableId);
             setPaymentMethod('cash');
             if (lowItems.length) showToast(`ស្តុកទាប៖ ${lowItems.join(', ')}`, "warning");
@@ -1580,7 +1790,8 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="py-1"><div>${esc(i.name)}${isBakery ? '' : ` (${esc(i.size)})`}</div>
-                        ${isBakery ? '' : `<div class="text-[9px] text-slate-500">${esc(i.sugar)}, ${esc(i.ice)}${i.toppings.length ? ', +' + esc(i.toppings.map(toppingName).join(', ')) : ''}</div>`}</td>
+                        ${isBakery ? '' : `<div class="text-[9px] text-slate-500">${esc(i.sugar)}, ${esc(i.ice)}${i.toppings.length ? ', +' + esc(i.toppings.map(toppingName).join(', ')) : ''}</div>`}
+                        ${i.note ? `<div class="text-[9px] text-slate-500">» ${esc(i.note)}</div>` : ''}</td>
                     <td class="text-center">${i.qty}</td>
                     <td class="text-right">${fmtUSD(i.unitPrice * i.qty)}</td>`;
                 tbody.appendChild(tr);
@@ -1625,6 +1836,7 @@
             if (!toTbl.discount) { toTbl.discount = fromTbl.discount || 0; toTbl.discountBy = fromTbl.discountBy || null; }
             fromTbl.cart = []; fromTbl.status = "available"; fromTbl.discount = 0; fromTbl.discountBy = null;
             saveTablesState();
+            dropTakeawayIfEmpty(fromTbl);
             closeModal('modal-table-transfer');
             selectTable(toId);
             showToast(`បានផ្ទេរទៅ ${toTbl.name}!`, "success");
@@ -1648,6 +1860,9 @@
                     <td class="p-3 text-center text-rose-600 font-bold">-${(item.used || 0).toLocaleString('en-US')}</td>
                     <td class="p-3 text-center"><span class="font-bold px-2.5 py-1 rounded-full ${isLow ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-800'}">${item.stock.toLocaleString('en-US')} ${esc(item.unit)}</span></td>
                     <td class="p-3 text-center text-slate-500">${item.alertThreshold.toLocaleString('en-US')} ${esc(item.unit)}</td>
+                    <td class="p-3 text-center">${unitCost(item.id) ? `$${unitCost(item.id).toFixed(4)}` : '<span class="text-amber-600">មិនទាន់កំណត់</span>'}
+                        <button onclick="setIngredientCost(${item.id})" class="ml-1 text-amber-800" title="កែថ្លៃដើម"><i class="fa-solid fa-pen text-[10px]"></i></button></td>
+                    <td class="p-3 text-center font-semibold text-slate-700">${unitCost(item.id) ? fmtUSD(item.stock * unitCost(item.id)) : '-'}</td>
                     <td class="p-3 text-center whitespace-nowrap">
                         <button onclick="restockItem(${item.id})" class="bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold px-2.5 py-1 rounded-lg text-xs"><i class="fa-solid fa-plus-circle"></i> បំពេញស្តុក</button>
                         <button onclick="deleteIngredient(${item.id})" class="text-rose-500 hover:text-rose-700 px-2 py-1 text-xs" title="លុប"><i class="fa-solid fa-trash-can"></i></button>
@@ -1673,6 +1888,26 @@
             enqueue('restock', { rawId: item.id, qty: n, by: currentUser.name, ts: new Date().toISOString() });
             renderRawInventory();
             showToast("បានបន្ថែមស្តុកជោគជ័យ!", "success");
+        }
+        // Cost entered as purchase price for a pack (e.g. $9.50 per 1000 g) → stored per unit
+        async function setIngredientCost(id) {
+            const item = rawInventory.find(r => r.id === id);
+            if (!item) return;
+            const ok = await askManager({ title: `កំណត់ថ្លៃដើម ${item.name}` });
+            if (!ok) return;
+            const price = prompt(`តម្លៃទិញ ($) នៃ ${item.name}:\n(ឧ. ទិញ 1 កញ្ចប់ $9.50)`, '');
+            if (price === null) return;
+            const p = parseFloat(price);
+            if (isNaN(p) || p < 0) { showToast("តម្លៃមិនត្រឹមត្រូវ", "warning"); return; }
+            const qty = prompt(`បរិមាណក្នុងតម្លៃនោះ (${item.unit}):\n(ឧ. 1000 ${item.unit})`, item.unit === 'pcs' ? '100' : '1000');
+            if (qty === null) return;
+            const q = parseFloat(qty);
+            if (isNaN(q) || q <= 0) { showToast("បរិមាណមិនត្រឹមត្រូវ", "warning"); return; }
+            settings.costs[item.id] = Math.round(p / q * 1e6) / 1e6;
+            saveJSON('cafe_settings', settings);
+            pushConfig('settings');
+            renderRawInventory();
+            showToast(`ថ្លៃដើម ${item.name} = $${settings.costs[item.id].toFixed(4)}/${item.unit}`, "success");
         }
         async function openAddIngredientModal() {
             const ok = await askManager({ title: 'បន្ថែមវត្ថុធាតុដើមថ្មី' });
@@ -1802,13 +2037,14 @@
             const d = iso => { const x = new Date(iso); return [x.toLocaleDateString('en-CA'), x.toLocaleTimeString('en-GB')]; };
             let lines;
             if (kind === 'bills') {
-                lines = [['Invoice', 'Date', 'Time', 'Table', 'Cashier', 'Payment', 'Ref', 'Subtotal USD', 'Discount %', 'Discount USD', 'Discount Approved By', 'Total USD', 'Total KHR', 'Paid Cash USD', 'Paid Cash KHR', 'Change USD', 'Rate', 'Status', 'Void Reason', 'Void By']];
+                lines = [['Invoice', 'Date', 'Time', 'Table', 'Cashier', 'Payment', 'Ref', 'Subtotal USD', 'Discount %', 'Discount USD', 'Discount Approved By', 'Total USD', 'Total KHR', 'Paid Cash USD', 'Paid Cash KHR', 'Change USD', 'Rate', 'Status', 'Void Reason', 'Void By', 'Order Type', 'COGS USD', 'Gross Profit USD']];
                 rows.forEach(s => lines.push([s.invId, ...d(s.timestamp), s.table, s.cashierName, s.paymentMethod, s.ref, s.subtotal, s.discountPct || 0, s.discount, s.discountBy, s.totalUSD,
-                    khrRound(s.totalUSD * (s.rate || rate())), s.paidCashUSD || 0, s.paidCashKHR || 0, s.changeUSD, s.rate || rate(), s.voided ? 'VOID' : 'PAID', s.voidReason, s.voidBy]));
+                    khrRound(s.totalUSD * (s.rate || rate())), s.paidCashUSD || 0, s.paidCashKHR || 0, s.changeUSD, s.rate || rate(), s.voided ? 'VOID' : 'PAID', s.voidReason, s.voidBy,
+                    s.orderType || (isTakeaway(s.table) || /Takeaway|ខ្ចប់/.test(s.table) ? 'takeaway' : 'dine-in'), saleCogs(s), round2(s.totalUSD - saleCogs(s))]));
             } else {
-                lines = [['Invoice', 'Date', 'Time', 'Cashier', 'Item', 'Size', 'Sugar', 'Ice', 'Toppings', 'Qty', 'Unit Price USD', 'Line Total USD', 'Status']];
+                lines = [['Invoice', 'Date', 'Time', 'Cashier', 'Item', 'Size', 'Sugar', 'Ice', 'Toppings', 'Note', 'Qty', 'Unit Price USD', 'Line Total USD', 'Status']];
                 rows.forEach(s => s.items.forEach(i => lines.push([s.invId, ...d(s.timestamp), s.cashierName, i.name, i.size, i.sugar, i.ice,
-                    i.toppings.map(toppingName).join(' | '), i.qty, i.unitPrice, round2(i.unitPrice * i.qty), s.voided ? 'VOID' : 'PAID'])));
+                    i.toppings.map(toppingName).join(' | '), i.note || '', i.qty, i.unitPrice, round2(i.unitPrice * i.qty), s.voided ? 'VOID' : 'PAID'])));
             }
             const csv = '﻿' + lines.map(r => r.map(q).join(',')).join('\r\n');
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
@@ -1830,13 +2066,62 @@
         }
         function filterAnalyticsTimeframe(tf) { activeTimeframe = tf; setTimeframeButtons(); renderAnalytics(); }
         function renderAnalytics() {
-            const sales = salesHistory.filter(s => !s.voided && inTimeframe(s.timestamp, activeTimeframe));
-            let totalRev = 0, totalCups = 0;
-            const itemMap = {};
+            const inTf = salesHistory.filter(s => inTimeframe(s.timestamp, activeTimeframe));
+            const sales = inTf.filter(s => !s.voided);
+            let totalRev = 0, totalCups = 0, totalCogs = 0, totalDisc = 0;
+            const itemMap = {}, detail = {}, hours = Array(24).fill(0), pay = {};
             sales.forEach(s => {
                 totalRev += s.totalUSD;
-                s.items.forEach(i => { totalCups += i.qty; itemMap[i.name] = (itemMap[i.name] || 0) + i.qty; });
+                totalDisc += s.discount || 0;
+                totalCogs += saleCogs(s);
+                hours[new Date(s.timestamp).getHours()] += s.totalUSD;
+                pay[s.paymentMethod] = (pay[s.paymentMethod] || 0) + s.totalUSD;
+                const discF = s.subtotal > 0 ? s.totalUSD / s.subtotal : 1;
+                s.items.forEach(i => {
+                    totalCups += i.qty;
+                    itemMap[i.name] = (itemMap[i.name] || 0) + i.qty;
+                    const d = detail[i.name] || (detail[i.name] = { qty: 0, rev: 0, cost: 0 });
+                    d.qty += i.qty;
+                    d.rev += i.unitPrice * i.qty * discF;
+                    const m = menuItems.find(x => x.id === i.itemId);
+                    if (m) d.cost += costOfConsumption(computeConsumption([i]));
+                });
             });
+            totalRev = round2(totalRev); totalCogs = round2(totalCogs);
+            const profit = round2(totalRev - totalCogs);
+            const noCost = !Object.values(settings.costs || {}).some(v => v > 0);
+            document.getElementById('ana-cogs').innerText = fmtUSD(totalCogs);
+            document.getElementById('ana-cogs-note').innerText = noCost ? 'កំណត់ថ្លៃដើមនៅផ្ទាំង ស្តុក' : '';
+            document.getElementById('ana-profit').innerText = fmtUSD(profit);
+            document.getElementById('ana-margin').innerText = totalRev > 0 ? `Margin ${(profit / totalRev * 100).toFixed(1)}%` : '-';
+            document.getElementById('ana-discount').innerText = fmtUSD(totalDisc);
+            const voids = inTf.filter(s => s.voided);
+            document.getElementById('ana-voids').innerText = `${voids.length} (${fmtUSD(voids.reduce((t, s) => t + s.totalUSD, 0))})`;
+            const payLabels = { cash: ['សាច់ប្រាក់', 'bg-emerald-600'], khqr: ['KHQR', 'bg-red-600'], card: ['កាត', 'bg-blue-600'] };
+            document.getElementById('ana-paymix').innerHTML = totalRev > 0 ? Object.entries(pay).sort((a, b) => b[1] - a[1]).map(([k, v]) => {
+                const [l, c] = payLabels[k] || [k, 'bg-slate-500'];
+                const pct = v / totalRev * 100;
+                return `<div><div class="flex justify-between font-semibold"><span>${esc(l)}</span><span>${fmtUSD(v)} • ${pct.toFixed(0)}%</span></div>
+                    <div class="w-full h-2 bg-slate-100 rounded mt-1"><div class="h-2 rounded ${c}" style="width:${pct}%"></div></div></div>`;
+            }).join('') : '<p class="text-slate-400">គ្មានទិន្នន័យ</p>';
+            const rows = Object.entries(detail).sort((a, b) => b[1].rev - a[1].rev);
+            document.getElementById('ana-items-tbody').innerHTML = rows.length ? rows.map(([n, d]) => {
+                const p = d.rev - d.cost, mg = d.rev > 0 ? p / d.rev * 100 : 0;
+                return `<tr><td class="p-3 font-semibold text-slate-800">${esc(n)}</td><td class="p-3 text-right">${d.qty}</td><td class="p-3 text-right">${fmtUSD(d.rev)}</td>
+                    <td class="p-3 text-right text-rose-600">${d.cost ? fmtUSD(d.cost) : '-'}</td><td class="p-3 text-right font-bold text-emerald-700">${fmtUSD(p)}</td>
+                    <td class="p-3 text-right font-bold ${mg < 50 ? 'text-amber-600' : 'text-emerald-700'}">${d.cost ? mg.toFixed(0) + '%' : '-'}</td></tr>`;
+            }).join('') : '<tr><td colspan="6" class="p-6 text-center text-slate-400">គ្មានការលក់</td></tr>';
+            if (typeof Chart !== 'undefined') {
+                const hctx = document.getElementById('analyticsHourChart').getContext('2d');
+                if (analyticsHourChart) analyticsHourChart.destroy();
+                const first = Math.min(6, ...hours.map((v, h) => v > 0 ? h : 24)), last = Math.max(21, ...hours.map((v, h) => v > 0 ? h : 0));
+                const hs = []; for (let h = first; h <= last; h++) hs.push(h);
+                analyticsHourChart = new Chart(hctx, {
+                    type: 'bar',
+                    data: { labels: hs.map(h => `${h}:00`), datasets: [{ label: 'ចំណូល ($)', data: hs.map(h => round2(hours[h])), backgroundColor: 'rgba(5, 150, 105, 0.75)', borderRadius: 4 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+                });
+            }
             document.getElementById('ana-total-rev').innerText = fmtUSD(totalRev);
             document.getElementById('ana-total-rev-khr').innerText = fmtKHR(totalRev);
             document.getElementById('ana-total-cups').innerText = totalCups;
@@ -1867,11 +2152,14 @@
             const card = sum(sales.filter(s => s.paymentMethod === 'card'));
             const itemVoids = voidLog.filter(v => v.type === 'item' && new Date(v.ts) >= start);
             const floatUSD = shiftState.float ?? settings.defaultFloat;
+            const expenses = shiftState.expenses || [];
+            const expenseTotal = round2(expenses.reduce((t, e) => t + e.amount, 0));
             return {
                 start, sales, cash, khqr, card, bank: round2(khqr + card),
                 discount: round2(sales.reduce((t, s) => t + (s.discount || 0), 0)),
                 gross: round2(sales.reduce((t, s) => t + s.subtotal, 0)),
-                net: round2(cash + khqr + card), floatUSD, expected: round2(floatUSD + cash),
+                expenses, expenseTotal,
+                net: round2(cash + khqr + card), floatUSD, expected: round2(floatUSD + cash - expenseTotal),
                 cups: sales.reduce((t, s) => t + s.items.reduce((a, i) => a + i.qty, 0), 0),
                 voidedBills, voidedBillsAmt: sum(voidedBills),
                 itemVoids, itemVoidsAmt: round2(itemVoids.reduce((t, v) => t + v.amount, 0))
@@ -1894,8 +2182,37 @@
             document.getElementById('shift-item-voids').innerText = `${s.itemVoids.length} (${fmtUSD(s.itemVoidsAmt)})`;
             document.getElementById('shift-bill-voids').innerText = `${s.voidedBills.length} (${fmtUSD(s.voidedBillsAmt)})`;
             document.getElementById('shift-expected-cash').innerText = fmtUSD(s.expected);
+            document.getElementById('shift-expense-total').innerText = `-${fmtUSD(s.expenseTotal)}`;
+            document.getElementById('shift-expense-list').innerHTML = s.expenses.length ? s.expenses.map((e, i) => `
+                <div class="py-1.5 flex justify-between gap-2">
+                    <span>${new Date(e.ts).toLocaleTimeString('en-GB')} • ${esc(e.reason)} <span class="text-slate-400">(${esc(e.by)}${e.approvedBy ? ' → ' + esc(e.approvedBy) : ''})</span></span>
+                    <span class="font-bold text-rose-600">-${fmtUSD(e.amount)} <button onclick="removeExpense(${i})" class="ml-1 text-slate-400 hover:text-rose-600"><i class="fa-solid fa-xmark"></i></button></span>
+                </div>`).join('') : '<p class="text-slate-400 py-1">គ្មានការដកប្រាក់</p>';
             calculateShiftVariance();
             renderShiftHistory();
+        }
+        async function addExpense() {
+            const amount = round2(parseFloat(document.getElementById('exp-amount').value));
+            const reason = document.getElementById('exp-reason').value.trim();
+            if (!(amount > 0)) { showToast("សូមបញ្ចូលចំនួនទឹកប្រាក់", "warning"); return; }
+            if (!reason) { showToast("សូមបញ្ចូលមូលហេតុ", "warning"); return; }
+            const ok = await askManager({ title: `ដកប្រាក់ពីថត ${fmtUSD(amount)} — ${reason}` });
+            if (!ok) return;
+            shiftState.expenses.push({ amount, reason, by: currentUser.name, approvedBy: ok.manager.name, ts: new Date().toISOString() });
+            saveJSON('cafe_shift', shiftState);
+            document.getElementById('exp-amount').value = '';
+            document.getElementById('exp-reason').value = '';
+            renderShift();
+            showToast("បានកត់ត្រាការដកប្រាក់", "success");
+        }
+        async function removeExpense(i) {
+            const e = shiftState.expenses[i];
+            if (!e) return;
+            const ok = await askManager({ title: `លុបការដកប្រាក់ ${fmtUSD(e.amount)} — ${e.reason}` });
+            if (!ok) return;
+            shiftState.expenses.splice(i, 1);
+            saveJSON('cafe_shift', shiftState);
+            renderShift();
         }
         function onFloatChange() {
             const v = parseFloat(document.getElementById('shift-float-input').value);
@@ -1930,7 +2247,10 @@
                     ${row('Void មុខទំនិញ:', `${s.itemVoids.length} / ${fmtUSD(s.itemVoidsAmt)}`)}
                     ${row('Void វិក្កយបត្រ:', `${s.voidedBills.length} / ${fmtUSD(s.voidedBillsAmt)}`)}</div>
                 <div class="space-y-0.5 border-t border-dashed border-slate-400 pt-1">
-                    ${row('ប្រាក់ដើមគ្រា:', fmtUSD(s.floatUSD))}${row('ត្រូវមានក្នុងថត:', fmtUSD(s.expected), true)}
+                    ${row('ប្រាក់ដើមគ្រា:', fmtUSD(s.floatUSD))}${row('+ សាច់ប្រាក់លក់:', fmtUSD(s.cash))}
+                    ${row(`- ចំណាយពីថត (${s.expenses.length}):`, '-' + fmtUSD(s.expenseTotal))}
+                    ${s.expenses.map(e => row('&nbsp;&nbsp;• ' + esc(e.reason), '-' + fmtUSD(e.amount))).join('')}
+                    ${row('ត្រូវមានក្នុងថត:', fmtUSD(s.expected), true)}
                     ${row('រាប់បាន:', counted === null ? '-' : fmtUSD(counted))}${row('ខុសគ្នា:', variance === null ? '-' : fmtUSD(variance), true)}</div>
                 <p class="text-center mt-4 text-[10px]">ហត្ថលេខាបុគ្គលិក: ____________</p>
                 <p class="text-center mt-3 text-[10px]">ហត្ថលេខាអ្នកគ្រប់គ្រង: ____________</p>`;
@@ -1958,12 +2278,12 @@
                 start: shiftState.start, end: new Date().toISOString(), closedBy: currentUser.name, approvedBy: ok.manager.name,
                 bills: s.sales.length, net: s.net, cash: s.cash, khqr: s.khqr, card: s.card, discount: s.discount,
                 itemVoids: s.itemVoids.length, itemVoidsAmt: s.itemVoidsAmt, billVoids: s.voidedBills.length, billVoidsAmt: s.voidedBillsAmt,
-                float: s.floatUSD, expected: s.expected, counted, variance: round2(counted - s.expected)
+                float: s.floatUSD, expenses: s.expenseTotal, expenseItems: s.expenses, expected: s.expected, counted, variance: round2(counted - s.expected)
             });
             enqueue('shift', shiftReports[0]);
             shiftReports = shiftReports.slice(0, 120);
             saveJSON('cafe_shift_reports', shiftReports);
-            shiftState = { start: new Date().toISOString(), float: s.floatUSD };
+            shiftState = { start: new Date().toISOString(), float: s.floatUSD, expenses: [] };
             saveJSON('cafe_shift', shiftState);
             document.getElementById('shift-counted-usd').value = '';
             document.getElementById('shift-counted-khr').value = '';
@@ -1994,15 +2314,40 @@
                 div.innerHTML = `
                     <div class="flex justify-between items-center font-bold text-slate-800 gap-2">
                         <span class="flex items-center gap-2">${item.image ? `<img src="${item.image}" alt="" class="w-10 h-10 object-cover rounded-lg flex-none">` : `<i class="fa-solid ${esc(item.icon || 'fa-mug-hot')} text-amber-800"></i>`} ${esc(item.name)} (${fmtUSD(item.price)})</span>
-                        <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded">${esc(item.category)}</span>
+                        <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded">${esc(catLabel(item.category))}</span>
                     </div>
                     <div class="text-[11px] text-slate-500"><strong>រូបមន្ត:</strong> ${recipeText}</div>
+                    <div class="text-[11px]">${costLine(item)}</div>
                     <div class="flex justify-end gap-3 pt-1 border-t border-slate-100">
+                        <button onclick="toggleSoldOut(${item.id})" class="${item.soldOut ? 'text-emerald-700' : 'text-slate-500'} font-bold mr-auto"><i class="fa-solid ${item.soldOut ? 'fa-circle-check' : 'fa-ban'}"></i> ${item.soldOut ? 'បើកលក់វិញ' : 'ដាក់ "អស់"'}</button>
                         <button onclick="openAddMenuModal(${item.id})" class="text-amber-800 font-bold"><i class="fa-solid fa-pen"></i> កែប្រែ</button>
                         <button onclick="deleteMenuItem(${item.id})" class="text-rose-600 font-bold"><i class="fa-solid fa-trash-can"></i> លុប</button>
                     </div>`;
                 container.appendChild(div);
             });
+        }
+        function costLine(item) {
+            if (!item.recipe.length) return '<span class="text-slate-400">ថ្លៃដើម៖ គ្មានរូបមន្ត</span>';
+            const c = recipeCost(item), mg = item.price > 0 ? (item.price - c) / item.price * 100 : 0;
+            return `<span class="text-slate-600">ថ្លៃដើម (Regular)៖ <strong class="text-rose-600">${fmtUSD(c)}</strong> • ចំណេញ <strong class="text-emerald-700">${fmtUSD(item.price - c)}</strong> • Margin <strong class="${mg < 50 ? 'text-amber-600' : 'text-emerald-700'}">${mg.toFixed(0)}%</strong></span>${recipeMissingCost(item) ? ' <span class="text-amber-600">(វត្ថុធាតុខ្លះមិនទាន់មានថ្លៃដើម)</span>' : ''}`;
+        }
+        function toggleSoldOut(id) {
+            const item = menuItems.find(m => m.id === id);
+            if (!item) return;
+            item.soldOut = !item.soldOut;
+            saveMenuItems();
+            pushConfig('menu:' + id);
+            renderSettingsMenuList();
+            renderPosMenu();
+            showToast(item.soldOut ? `${item.name} — អស់` : `${item.name} — បើកលក់វិញ`, "info");
+        }
+        function updateMenuCostPreview() {
+            const price = parseFloat(document.getElementById('menu-price').value) || 0;
+            const recipe = [...document.querySelectorAll('#recipe-rows .recipe-row')].map(row => ({
+                rawId: parseInt(row.querySelector('.recipe-raw').value), qty: parseFloat(row.querySelector('.recipe-qty').value) || 0 }));
+            const el = document.getElementById('menu-cost-preview');
+            if (!recipe.length) { el.innerHTML = ''; return; }
+            el.innerHTML = costLine({ recipe, price });
         }
         function setMenuImage(dataUrl) {
             menuImageData = dataUrl;
@@ -2022,8 +2367,11 @@
             row.innerHTML = `
                 <select class="recipe-raw flex-1 p-2 border rounded-lg outline-none">${rawInventory.map(r => `<option value="${r.id}" ${r.id === rawId ? 'selected' : ''}>${esc(r.name)} (${esc(r.unit)})</option>`).join('')}</select>
                 <input type="number" class="recipe-qty w-20 p-2 border rounded-lg outline-none" min="0" step="any" placeholder="ចំនួន" value="${qty ?? ''}">
-                <button type="button" onclick="this.parentElement.remove()" class="text-rose-500 px-1"><i class="fa-solid fa-xmark"></i></button>`;
+                <button type="button" onclick="this.parentElement.remove(); updateMenuCostPreview()" class="text-rose-500 px-1"><i class="fa-solid fa-xmark"></i></button>`;
+            row.querySelector('.recipe-raw').onchange = updateMenuCostPreview;
+            row.querySelector('.recipe-qty').oninput = updateMenuCostPreview;
             document.getElementById('recipe-rows').appendChild(row);
+            updateMenuCostPreview();
         }
         function openAddMenuModal(editId) {
             const item = editId ? menuItems.find(m => m.id === editId) : null;
@@ -2033,15 +2381,20 @@
             document.getElementById('menu-category').value = item ? item.category : 'coffee';
             document.getElementById('menu-price').value = item ? item.price : '';
             document.getElementById('menu-icon').value = item ? item.icon : 'fa-mug-hot';
+            document.getElementById('menu-category-list').innerHTML = [...new Set([...Object.keys(CATEGORY_LABELS), ...menuCategories()])].map(c => `<option value="${esc(c)}">${esc(catLabel(c))}</option>`).join('');
+            document.getElementById('menu-no-options').checked = item ? !hasOptions(item) : false;
+            document.getElementById('menu-sold-out').checked = !!(item && item.soldOut);
+            document.getElementById('menu-price').oninput = updateMenuCostPreview;
             setMenuImage(item && item.image ? item.image : null);
             document.getElementById('recipe-rows').innerHTML = '';
+            document.getElementById('menu-cost-preview').innerHTML = '';
             if (item) item.recipe.forEach(r => addRecipeRow(r.rawId, r.qty));
             openModal('modal-menu');
         }
         function saveMenuItem() {
             const editId = parseInt(document.getElementById('menu-edit-id').value) || null;
             const name = document.getElementById('menu-name').value.trim();
-            const category = document.getElementById('menu-category').value;
+            const category = (document.getElementById('menu-category').value.trim() || 'coffee').slice(0, 30);
             const price = parseFloat(document.getElementById('menu-price').value);
             const icon = document.getElementById('menu-icon').value;
             if (!name) { showToast("សូមបញ្ចូលឈ្មោះមុខម្ហូប", "warning"); return; }
@@ -2057,7 +2410,8 @@
             });
             if (invalid) { showToast("សូមបញ្ចូលចំនួនគ្រឿងផ្សំឲ្យត្រឹមត្រូវ", "warning"); return; }
             const backup = JSON.parse(JSON.stringify(menuItems));
-            const data = { name, category, price: round2(price), icon, recipe, image: menuImageData || null };
+            const data = { name, category, price: round2(price), icon, recipe, image: menuImageData || null,
+                noOptions: document.getElementById('menu-no-options').checked, soldOut: document.getElementById('menu-sold-out').checked };
             if (editId) Object.assign(menuItems.find(m => m.id === editId), data);
             else menuItems.push(Object.assign({ id: uid() }, data));
             if (!saveMenuItems()) { menuItems = backup; showToast("Storage ពេញ — សូមប្រើរូបតិចជាងនេះ", "warning"); return; }
@@ -2369,8 +2723,14 @@
                 if (e.key === 'Escape') resolveApprove(false);
                 return;
             }
+            if (e.key === 'Enter' && isOpen('modal-customization') && document.activeElement.tagName !== 'BUTTON') { confirmAddToCart(); return; }
             if (e.key === 'Escape') ['modal-customization', 'modal-khqr', 'modal-receipt', 'modal-table-transfer', 'modal-ingredient', 'modal-menu', 'modal-staff', 'modal-mypin'].forEach(closeModal);
         });
+
+        // ==================== OFFLINE (PWA) ====================
+        if ('serviceWorker' in navigator && location.protocol === 'https:') {
+            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { }));
+        }
     </script>
 </body>
 </html>
