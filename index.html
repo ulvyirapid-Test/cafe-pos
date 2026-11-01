@@ -65,7 +65,7 @@
                 <div class="min-w-0">
                     <h1 id="header-shop-name" class="text-lg font-bold leading-tight tracking-wide truncate">Cafee Ankor</h1>
                     <div class="flex items-center gap-2 text-xs text-amber-300/90">
-                        <span><i class="fa-solid fa-user-tie text-[10px]"></i> <strong id="header-cashier-name">-</strong></span>
+                        <button onclick="openMyPinModal()" class="hover:text-white" title="ប្តូរ PIN របស់ខ្ញុំ"><i class="fa-solid fa-user-tie text-[10px]"></i> <strong id="header-cashier-name">-</strong> <i class="fa-solid fa-key text-[9px]"></i></button>
                         <span id="header-role-badge" class="bg-amber-800 text-amber-100 text-[10px] px-2 py-0.5 rounded-full font-semibold">-</span>
                     </div>
                 </div>
@@ -389,15 +389,12 @@
 
                     <!-- Staff -->
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-2.5 text-xs">
-                        <h3 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-users text-amber-800"></i> បុគ្គលិក & PIN</h3>
-                        <div id="staff-list" class="divide-y divide-slate-100"></div>
-                        <div class="grid grid-cols-4 gap-2 pt-2 border-t border-slate-100">
-                            <input id="staff-new-name" placeholder="ឈ្មោះ" class="col-span-2 p-2 border rounded-lg outline-none">
-                            <select id="staff-new-role" class="p-2 border rounded-lg outline-none"><option value="cashier">Cashier</option><option value="manager">Manager</option></select>
-                            <input id="staff-new-pin" placeholder="PIN" inputmode="numeric" maxlength="6" class="p-2 border rounded-lg outline-none">
+                        <div class="flex justify-between items-center gap-2">
+                            <h3 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-users-gear text-amber-800"></i> គ្រប់គ្រងអ្នកប្រើប្រាស់</h3>
+                            <button onclick="openStaffModal()" class="bg-amber-800 hover:bg-amber-900 text-white font-bold px-3 py-1.5 rounded-lg"><i class="fa-solid fa-user-plus"></i> បន្ថែម</button>
                         </div>
-                        <button onclick="addStaff()" class="bg-amber-800 hover:bg-amber-900 text-white font-bold px-4 py-2 rounded-lg"><i class="fa-solid fa-user-plus"></i> បន្ថែមបុគ្គលិក</button>
-                        <p class="text-[10px] text-slate-400">PIN ៤-៦ ខ្ទង់ មិនស្ទួនគ្នា។ Cashier មិនអាចចូលផ្ទាំងវិភាគ និងការកំណត់បានទេ។</p>
+                        <div id="staff-list" class="divide-y divide-slate-100"></div>
+                        <p class="text-[10px] text-slate-400">PIN (លេខសម្ងាត់) ៤-៦ ខ្ទង់ មិនស្ទួនគ្នា។ Cashier មិនអាចចូលផ្ទាំងវិភាគ និងការកំណត់បានទេ ប៉ុន្តែអាចប្តូរ PIN ខ្លួនឯងដោយចុចឈ្មោះលើ header។</p>
                     </div>
                 </div>
 
@@ -681,6 +678,50 @@
             <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 flex gap-2">
                 <button onclick="closeModal('modal-menu')" class="flex-1 py-2 text-xs font-semibold bg-slate-200 rounded-lg">បោះបង់</button>
                 <button onclick="saveMenuItem()" class="flex-1 py-2 text-xs font-bold bg-amber-800 hover:bg-amber-900 text-white rounded-lg">រក្សាទុក</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: Add / edit user ================= -->
+    <div id="modal-staff" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-sm overflow-hidden">
+            <div class="bg-amber-900 text-white px-4 py-3 flex justify-between items-center">
+                <h3 id="staff-modal-title" class="font-bold text-xs">បន្ថែមអ្នកប្រើប្រាស់</h3>
+                <button onclick="closeModal('modal-staff')" class="text-white font-bold text-lg">&times;</button>
+            </div>
+            <div class="p-4 space-y-3 text-xs">
+                <input type="hidden" id="staff-edit-id">
+                <div><label class="block font-bold text-slate-700 mb-1">ឈ្មោះ *</label><input id="staff-name" maxlength="30" class="w-full p-2 border rounded-lg outline-none" placeholder="ឧ. ដារ៉ា"></div>
+                <div><label class="block font-bold text-slate-700 mb-1">តួនាទី</label>
+                    <select id="staff-role" class="w-full p-2 border rounded-lg outline-none"><option value="cashier">Cashier (លក់ប៉ុណ្ណោះ)</option><option value="manager">Manager (គ្រប់គ្រងទាំងអស់)</option></select></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="block font-bold text-slate-700 mb-1">PIN ថ្មី <span id="staff-pin-req">*</span></label><input id="staff-pin" type="password" inputmode="numeric" maxlength="6" class="w-full p-2 border rounded-lg outline-none tracking-widest"></div>
+                    <div><label class="block font-bold text-slate-700 mb-1">បញ្ជាក់ PIN</label><input id="staff-pin2" type="password" inputmode="numeric" maxlength="6" class="w-full p-2 border rounded-lg outline-none tracking-widest"></div>
+                </div>
+                <p id="staff-pin-hint" class="text-[10px] text-slate-400">PIN ជាលេខ ៤-៦ ខ្ទង់</p>
+            </div>
+            <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 flex gap-2">
+                <button onclick="closeModal('modal-staff')" class="flex-1 py-2 text-xs font-semibold bg-slate-200 rounded-lg">បោះបង់</button>
+                <button onclick="saveStaff()" class="flex-1 py-2 text-xs font-bold bg-amber-800 hover:bg-amber-900 text-white rounded-lg">រក្សាទុក</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: Change my PIN ================= -->
+    <div id="modal-mypin" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-xs overflow-hidden">
+            <div class="bg-amber-900 text-white px-4 py-3 flex justify-between items-center">
+                <h3 class="font-bold text-xs"><i class="fa-solid fa-key"></i> ប្តូរ PIN របស់ខ្ញុំ</h3>
+                <button onclick="closeModal('modal-mypin')" class="text-white font-bold text-lg">&times;</button>
+            </div>
+            <div class="p-4 space-y-3 text-xs">
+                <div><label class="block font-bold text-slate-700 mb-1">PIN បច្ចុប្បន្ន</label><input id="mypin-old" type="password" inputmode="numeric" maxlength="6" class="w-full p-2 border rounded-lg outline-none tracking-widest"></div>
+                <div><label class="block font-bold text-slate-700 mb-1">PIN ថ្មី</label><input id="mypin-new" type="password" inputmode="numeric" maxlength="6" class="w-full p-2 border rounded-lg outline-none tracking-widest"></div>
+                <div><label class="block font-bold text-slate-700 mb-1">បញ្ជាក់ PIN ថ្មី</label><input id="mypin-new2" type="password" inputmode="numeric" maxlength="6" class="w-full p-2 border rounded-lg outline-none tracking-widest"></div>
+            </div>
+            <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 flex gap-2">
+                <button onclick="closeModal('modal-mypin')" class="flex-1 py-2 text-xs font-semibold bg-slate-200 rounded-lg">បោះបង់</button>
+                <button onclick="saveMyPin()" class="flex-1 py-2 text-xs font-bold bg-amber-800 hover:bg-amber-900 text-white rounded-lg">រក្សាទុក</button>
             </div>
         </div>
     </div>
@@ -1060,58 +1101,116 @@
 
         // ==================== STAFF ====================
         function renderStaffList() {
-            document.getElementById('staff-list').innerHTML = staff.map(s => `
+            const managers = staff.filter(x => x.role === 'manager').length;
+            document.getElementById('staff-list').innerHTML = staff.map(s => {
+                const me = currentUser && s.id === currentUser.id;
+                return `
                 <div class="py-2 flex items-center justify-between gap-2">
-                    <span class="font-bold text-slate-800">${esc(s.name)}
+                    <span class="min-w-0">
+                        <span class="font-bold text-slate-800">${esc(s.name)}</span>${me ? ' <span class="text-[10px] text-emerald-700 font-bold">(អ្នក)</span>' : ''}
                         <span class="ml-1 text-[10px] px-2 py-0.5 rounded-full ${s.role === 'manager' ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600'}">${s.role === 'manager' ? 'Manager' : 'Cashier'}</span>
                         ${s.pinDefault ? '<span class="ml-1 text-[10px] text-amber-600">⚠️ PIN លំនាំដើម</span>' : ''}
                     </span>
                     <span class="flex gap-3 flex-none">
-                        <button onclick="changeStaffPin(${s.id})" class="text-amber-800 font-bold"><i class="fa-solid fa-key"></i> ប្តូរ PIN</button>
-                        <button onclick="deleteStaff(${s.id})" class="text-rose-600 font-bold"><i class="fa-solid fa-trash-can"></i></button>
+                        <button onclick="openStaffModal(${s.id})" class="text-amber-800 font-bold"><i class="fa-solid fa-pen"></i> កែប្រែ</button>
+                        <button onclick="deleteStaff(${s.id})" class="font-bold ${me || (s.role === 'manager' && managers <= 1) ? 'text-slate-300 cursor-not-allowed' : 'text-rose-600'}" title="លុប"><i class="fa-solid fa-trash-can"></i></button>
                     </span>
-                </div>`).join('');
+                </div>`;
+            }).join('');
         }
         function validPin(pin, exceptId) {
             if (!/^\d{4,6}$/.test(pin)) { showToast("PIN ត្រូវតែជាលេខ ៤-៦ ខ្ទង់", "warning"); return false; }
-            if (staff.some(s => s.id !== exceptId && s.pin === hashPin(pin))) { showToast("PIN នេះមានគេប្រើរួចហើយ", "warning"); return false; }
+            if (staff.some(s => s.id !== exceptId && s.pin === hashPin(pin))) { showToast("PIN នេះមានគេប្រើរួចហើយ សូមជ្រើស PIN ផ្សេង", "warning"); return false; }
             return true;
         }
-        function addStaff() {
-            const name = document.getElementById('staff-new-name').value.trim();
-            const role = document.getElementById('staff-new-role').value;
-            const pin = document.getElementById('staff-new-pin').value.trim();
-            if (!name) { showToast("សូមបញ្ចូលឈ្មោះបុគ្គលិក", "warning"); return; }
-            if (!validPin(pin, null)) return;
-            staff.push({ id: uid(), name, role, pin: hashPin(pin), pinDefault: false });
+        function staffChanged() {
             saveJSON('cafe_staff', staff);
             pushConfig('staff');
-            document.getElementById('staff-new-name').value = '';
-            document.getElementById('staff-new-pin').value = '';
             renderStaffList();
-            showToast(`បានបន្ថែម ${name}`, "success");
+            renderLoginStaff();
+            if (currentUser) {
+                currentUser = staff.find(x => x.id === currentUser.id) || currentUser;
+                applyRoleHeader();
+            }
         }
-        function changeStaffPin(id) {
-            const s = staff.find(x => x.id === id);
-            const pin = prompt(`PIN ថ្មីសម្រាប់ ${s.name} (៤-៦ ខ្ទង់):`);
-            if (pin === null) return;
-            if (!validPin(pin.trim(), id)) return;
-            s.pin = hashPin(pin.trim());
-            s.pinDefault = false;
-            saveJSON('cafe_staff', staff);
-            pushConfig('staff');
-            renderStaffList();
-            showToast("បានប្តូរ PIN!", "success");
+        function openStaffModal(id) {
+            if (!isManager()) { showToast("សម្រាប់តែ Manager ប៉ុណ្ណោះ", "warning"); return; }
+            const s = id ? staff.find(x => x.id === id) : null;
+            document.getElementById('staff-edit-id').value = s ? s.id : '';
+            document.getElementById('staff-modal-title').innerHTML = s ? `<i class="fa-solid fa-user-pen"></i> កែប្រែ៖ ${esc(s.name)}` : '<i class="fa-solid fa-user-plus"></i> បន្ថែមអ្នកប្រើប្រាស់';
+            document.getElementById('staff-name').value = s ? s.name : '';
+            document.getElementById('staff-role').value = s ? s.role : 'cashier';
+            document.getElementById('staff-pin').value = '';
+            document.getElementById('staff-pin2').value = '';
+            document.getElementById('staff-pin-req').classList.toggle('hidden', !!s);
+            document.getElementById('staff-pin-hint').innerText = s ? 'ទុក PIN ទទេ បើមិនចង់ប្តូរ' : 'PIN ជាលេខ ៤-៦ ខ្ទង់ (មិនស្ទួនជាមួយអ្នកផ្សេង)';
+            openModal('modal-staff');
+            setTimeout(() => document.getElementById('staff-name').focus(), 50);
+        }
+        function saveStaff() {
+            if (!isManager()) return;
+            const id = parseInt(document.getElementById('staff-edit-id').value) || null;
+            const name = document.getElementById('staff-name').value.trim();
+            const role = document.getElementById('staff-role').value;
+            const pin = document.getElementById('staff-pin').value.trim();
+            const pin2 = document.getElementById('staff-pin2').value.trim();
+            if (!name) { showToast("សូមបញ្ចូលឈ្មោះ", "warning"); return; }
+            if (staff.some(x => x.id !== id && x.name.trim().toLowerCase() === name.toLowerCase())) { showToast("មានឈ្មោះនេះរួចហើយ", "warning"); return; }
+            if (!id || pin || pin2) {
+                if (pin !== pin2) { showToast("PIN និង បញ្ជាក់ PIN មិនដូចគ្នា", "warning"); return; }
+                if (!validPin(pin, id)) return;
+            }
+            if (id) {
+                const s = staff.find(x => x.id === id);
+                if (s.role === 'manager' && role !== 'manager' && staff.filter(x => x.role === 'manager').length <= 1) {
+                    showToast("ត្រូវមាន Manager យ៉ាងហោចណាស់ ១ នាក់", "warning"); return;
+                }
+                if (currentUser && s.id === currentUser.id && role !== 'manager' && !confirm("អ្នកកំពុងដកសិទ្ធិ Manager ពីខ្លួនឯង។ បន្ត?")) return;
+                s.name = name;
+                s.role = role;
+                if (pin) { s.pin = hashPin(pin); s.pinDefault = false; }
+                staffChanged();
+                closeModal('modal-staff');
+                showToast(`បានកែប្រែ ${name}${pin ? ' (PIN ថ្មី)' : ''}`, "success");
+                if (currentUser && s.id === currentUser.id && role !== 'manager') applyRole();
+            } else {
+                staff.push({ id: uid(), name, role, pin: hashPin(pin), pinDefault: false });
+                staffChanged();
+                closeModal('modal-staff');
+                showToast(`បានបន្ថែម ${name}`, "success");
+            }
         }
         function deleteStaff(id) {
+            if (!isManager()) return;
             const s = staff.find(x => x.id === id);
+            if (!s) return;
             if (currentUser && s.id === currentUser.id) { showToast("មិនអាចលុបគណនីដែលកំពុងប្រើបានទេ", "warning"); return; }
             if (s.role === 'manager' && staff.filter(x => x.role === 'manager').length <= 1) { showToast("ត្រូវមាន Manager យ៉ាងហោចណាស់ ១ នាក់", "warning"); return; }
-            if (!confirm(`លុបបុគ្គលិក ${s.name}?`)) return;
+            if (!confirm(`លុបអ្នកប្រើប្រាស់ ${s.name}?\n(ប្រវត្តិលក់របស់គាត់នៅដដែល)`)) return;
             staff = staff.filter(x => x.id !== id);
-            saveJSON('cafe_staff', staff);
-            pushConfig('staff');
-            renderStaffList();
+            staffChanged();
+            showToast(`បានលុប ${s.name}`, "success");
+        }
+        function openMyPinModal() {
+            if (!currentUser) return;
+            ['mypin-old', 'mypin-new', 'mypin-new2'].forEach(i => document.getElementById(i).value = '');
+            openModal('modal-mypin');
+            setTimeout(() => document.getElementById('mypin-old').focus(), 50);
+        }
+        function saveMyPin() {
+            const me = staff.find(x => x.id === currentUser.id);
+            const oldPin = document.getElementById('mypin-old').value.trim();
+            const p1 = document.getElementById('mypin-new').value.trim();
+            const p2 = document.getElementById('mypin-new2').value.trim();
+            if (!me || me.pin !== hashPin(oldPin)) { showToast("PIN បច្ចុប្បន្នមិនត្រឹមត្រូវ", "warning"); return; }
+            if (p1 !== p2) { showToast("PIN ថ្មី និង បញ្ជាក់ មិនដូចគ្នា", "warning"); return; }
+            if (p1 === oldPin) { showToast("PIN ថ្មីត្រូវតែខុសពី PIN ចាស់", "warning"); return; }
+            if (!validPin(p1, me.id)) return;
+            me.pin = hashPin(p1);
+            me.pinDefault = false;
+            staffChanged();
+            closeModal('modal-mypin');
+            showToast("បានប្តូរ PIN របស់អ្នក!", "success");
         }
 
         // ==================== POS & TABLES ====================
@@ -2106,6 +2205,7 @@
                 } else if (c.key === 'staff' && Array.isArray(c.value) && c.value.length) {
                     staff = c.value;
                     saveJSON('cafe_staff', staff);
+                    renderLoginStaff();
                     if (currentUser) {
                         const me = staff.find(s => s.id === currentUser.id);
                         if (me) { currentUser = me; applyRoleHeader(); } else logout();
@@ -2269,7 +2369,7 @@
                 if (e.key === 'Escape') resolveApprove(false);
                 return;
             }
-            if (e.key === 'Escape') ['modal-customization', 'modal-khqr', 'modal-receipt', 'modal-table-transfer', 'modal-ingredient', 'modal-menu'].forEach(closeModal);
+            if (e.key === 'Escape') ['modal-customization', 'modal-khqr', 'modal-receipt', 'modal-table-transfer', 'modal-ingredient', 'modal-menu', 'modal-staff', 'modal-mypin'].forEach(closeModal);
         });
     </script>
 </body>
