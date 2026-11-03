@@ -15,6 +15,115 @@
     <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;600;700&family=Siemreap&display=swap" rel="stylesheet">
     <style>
         * { font-family: 'Kantumruy Pro', 'Siemreap', sans-serif; }
+        /* ==================== THEME: "Glazed 3D" (body.theme-3d) ====================
+           Celadon canvas, porcelain panels, and buttons/tiles that look like glazed keys:
+           they have a visible edge and press down when tapped. */
+        body.theme-3d {
+            --espresso: #2E1A10; --roast: #8A3D12; --roast-deep: #5E260A; --celadon: #DCE6DF;
+            --porcelain: #FBFCFA; --jade: #17734F; --jade-deep: #0E5238; --gold: #D4A23A;
+            --edge: rgba(46, 26, 16, .22); --lift: 0 1px 0 rgba(255,255,255,.9) inset, 0 1px 2px rgba(46,26,16,.06), 0 12px 28px -14px rgba(46,26,16,.35);
+            background: radial-gradient(1200px 600px at 20% -10%, #F1F6F2 0%, var(--celadon) 55%, #CFDBD3 100%) fixed;
+        }
+        body.theme-3d header { background: linear-gradient(180deg, #3D2416 0%, var(--espresso) 100%); box-shadow: 0 6px 18px -6px rgba(46,26,16,.55); }
+        body.theme-3d header .bg-amber-700 { background: linear-gradient(145deg, #E0A63E, #A8661A); box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 3px 0 #6B3D0C; }
+        body.theme-3d header > div:last-child { background: linear-gradient(180deg, #5A2C12, #48210D); }
+        body.theme-3d .nav-btn.border-amber-400 { border-color: var(--gold); background: rgba(212,162,58,.16); }
+
+        /* Panels */
+        body.theme-3d .bg-white.rounded-xl, body.theme-3d .bg-white.rounded-2xl {
+            background: linear-gradient(180deg, #FFFFFF 0%, var(--porcelain) 100%);
+            border-color: rgba(46,26,16,.08); border-radius: 18px; box-shadow: var(--lift);
+        }
+        body.theme-3d .bg-slate-50 { background-color: #F3F6F3; }
+        body.theme-3d .bg-slate-100 { background-color: #E9EFEA; }
+
+        /* Keys: every coloured button gets an edge and presses down */
+        body.theme-3d button[class*="bg-"]:not(.nav-btn):not(.tf-btn),
+        body.theme-3d label[class*="bg-"][class*="cursor-pointer"] {
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 3px 0 var(--edge), 0 6px 12px -6px rgba(46,26,16,.35);
+            transition: transform .08s ease, box-shadow .08s ease, filter .15s ease;
+        }
+        body.theme-3d button[class*="bg-"]:not(.nav-btn):not(.tf-btn):hover { filter: brightness(1.04); }
+        body.theme-3d button[class*="bg-"]:not(.nav-btn):not(.tf-btn):active,
+        body.theme-3d label[class*="bg-"][class*="cursor-pointer"]:active {
+            transform: translateY(2px); box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 1px 0 var(--edge), 0 2px 4px -2px rgba(46,26,16,.3);
+        }
+        body.theme-3d button.bg-amber-800, body.theme-3d label.bg-amber-800, body.theme-3d button.bg-amber-900 {
+            background: linear-gradient(180deg, #A14C1C 0%, var(--roast) 55%, #7A3510 100%); --edge: var(--roast-deep);
+        }
+        body.theme-3d button.bg-emerald-700, body.theme-3d button.bg-emerald-600 {
+            background: linear-gradient(180deg, #1F8C62 0%, var(--jade) 60%, #126244 100%); --edge: var(--jade-deep);
+        }
+        body.theme-3d button.bg-rose-600 { background: linear-gradient(180deg, #E2475A, #C42E43); --edge: #8E1D2E; }
+        body.theme-3d button.bg-sky-600, body.theme-3d button.bg-sky-700 { background: linear-gradient(180deg, #2B90C9, #1D74A8); --edge: #134F74; }
+        body.theme-3d button.bg-violet-700 { background: linear-gradient(180deg, #7C4FD6, #6237B8); --edge: #42237E; }
+        body.theme-3d button.bg-white, body.theme-3d button.bg-slate-100, body.theme-3d button.bg-slate-200,
+        body.theme-3d button.bg-amber-100, body.theme-3d button.bg-amber-50, body.theme-3d button.bg-emerald-100 {
+            background-image: linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,0)); --edge: rgba(46,26,16,.16);
+        }
+
+        /* Table keys: the open table glows gold */
+        body.theme-3d #table-grid { background: transparent; }
+        body.theme-3d #table-grid button { border-radius: 14px; }
+        body.theme-3d #table-grid button.bg-amber-900 { box-shadow: 0 0 0 2px var(--gold), inset 0 1px 0 rgba(255,255,255,.3), 0 3px 0 var(--roast-deep), 0 8px 16px -6px rgba(94,38,10,.6); }
+
+        /* Menu tiles: the memorable part — glazed ceramic keys */
+        body.theme-3d #pos-menu-grid > div {
+            border: 1px solid rgba(46,26,16,.07); border-radius: 16px;
+            background: linear-gradient(165deg, #FFFFFF 0%, #F7FAF7 60%, #EEF3EF 100%);
+            box-shadow: inset 0 1px 0 #fff, 0 4px 0 #C9D5CC, 0 12px 20px -10px rgba(46,26,16,.35);
+            transition: transform .1s ease, box-shadow .1s ease;
+        }
+        body.theme-3d #pos-menu-grid > div:hover { transform: translateY(-2px); box-shadow: inset 0 1px 0 #fff, 0 6px 0 #C9D5CC, 0 18px 26px -12px rgba(46,26,16,.4); border-color: rgba(138,61,18,.25); }
+        body.theme-3d #pos-menu-grid > div:active { transform: translateY(3px); box-shadow: inset 0 1px 0 #fff, 0 1px 0 #C9D5CC, 0 4px 8px -4px rgba(46,26,16,.3); }
+        body.theme-3d #pos-menu-grid > div .bg-amber-100 {
+            background: radial-gradient(circle at 30% 25%, #FFE7B3 0%, #F2C36B 55%, #D9962F 100%); color: #5E260A;
+            box-shadow: inset 0 1px 1px rgba(255,255,255,.7), 0 2px 0 #A8661A; border-radius: 12px;
+        }
+        body.theme-3d #pos-menu-grid > div img { border-radius: 12px; box-shadow: 0 6px 12px -8px rgba(46,26,16,.6); }
+        body.theme-3d #pos-menu-grid h4 { color: var(--espresso); }
+        body.theme-3d #pos-menu-grid .text-amber-800 { color: var(--roast); font-size: .85rem; }
+
+        /* Order lines sit slightly recessed in the panel */
+        body.theme-3d #cart-items-container > div { border-radius: 14px; box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 2px 6px -3px rgba(46,26,16,.2); }
+
+        /* Inputs are wells */
+        body.theme-3d input:not([type="checkbox"]):not([type="radio"]), body.theme-3d select, body.theme-3d textarea {
+            box-shadow: inset 0 2px 3px rgba(46,26,16,.08); border-color: rgba(46,26,16,.15);
+        }
+
+        /* Pop-ups rise from the counter */
+        body.theme-3d .fixed.inset-0.flex { backdrop-filter: blur(3px); }
+        body.theme-3d #login-overlay { background: radial-gradient(900px 600px at 50% 20%, #5A3420 0%, var(--espresso) 60%, #1E110A 100%); }
+        body.theme-3d #login-overlay > div { box-shadow: 0 40px 80px -30px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.06); }
+        body.theme-3d #login-overlay .bg-amber-900 { background: linear-gradient(180deg, #8A3D12, #6A2D0C); }
+        body.theme-3d .fixed.inset-0.flex:not(#login-overlay) > div:not(#test-banner) { animation: rise3d .18s cubic-bezier(.2,.9,.3,1.2); box-shadow: 0 30px 60px -20px rgba(20,12,6,.55), 0 0 0 1px rgba(255,255,255,.4) inset; border-radius: 20px; }
+        @keyframes rise3d { from { transform: translateY(14px) scale(.97); opacity: 0; } to { transform: none; opacity: 1; } }
+        body.theme-3d #co-total-usd { text-shadow: 0 1px 0 #fff, 0 2px 0 rgba(46,26,16,.12); letter-spacing: -.01em; }
+
+        /* Option keys (size, sugar, ice) */
+        body.theme-3d .opt-sugar, body.theme-3d .opt-ice {
+            background: linear-gradient(180deg, #FFFFFF, #F1F5F2); border-color: rgba(46,26,16,.12);
+            box-shadow: inset 0 1px 0 #fff, 0 3px 0 rgba(46,26,16,.14); transition: transform .08s ease, box-shadow .08s ease;
+        }
+        body.theme-3d .opt-sugar.bg-amber-800, body.theme-3d .opt-ice.bg-amber-800 {
+            background: linear-gradient(180deg, #A14C1C, var(--roast) 55%, #7A3510); box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 3px 0 var(--roast-deep);
+        }
+        body.theme-3d .opt-sugar:active, body.theme-3d .opt-ice:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(46,26,16,.2); }
+
+        /* The menu sits on a slightly sunken tray so the keys stand out */
+        body.theme-3d #pos-menu-grid { background: linear-gradient(180deg, #EEF3EF 0%, #E6EDE8 100%); box-shadow: inset 0 2px 6px rgba(46,26,16,.08); }
+        body.theme-3d #pos-menu-grid > div h4 { font-size: .8rem; }
+
+        /* Amount due reads like a register display */
+        body.theme-3d #summary-total-usd, body.theme-3d #summary-total-khr { font-size: 1rem; }
+        body.theme-3d #summary-subtotal { color: var(--espresso); }
+
+        @media (prefers-reduced-motion: reduce) {
+            body.theme-3d *, body.theme-3d *::before { transition: none !important; animation: none !important; }
+            body.theme-3d #pos-menu-grid > div:hover { transform: none; }
+        }
+
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -29,7 +138,7 @@
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 flex flex-col h-screen overflow-hidden select-none">
+<body class="theme-3d bg-slate-100 text-slate-800 flex flex-col h-screen overflow-hidden select-none">
     <!-- ================= TEST MODE BANNER ================= -->
     <div id="test-banner" class="fixed bottom-2 left-2 z-[100] flex items-center gap-2 bg-orange-600 text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg">
         <span>🧪 TEST MODE — ទិន្នន័យដាច់ពី POS ពិត</span>
@@ -503,6 +612,7 @@
                         </div>
                         <div><label class="block font-semibold text-slate-600 mb-0.5">សារខាងក្រោមវិក្កយបត្រ</label><input id="set-footer" class="w-full p-2 border rounded-lg outline-none"></div>
                         <label class="flex items-center gap-2 font-semibold text-slate-600"><input id="set-auto-ticket" type="checkbox" class="accent-amber-800"> បោះពុម្ព Ticket ឲ្យ Barista ស្វ័យប្រវត្តិ ពេលចុច "បញ្ជូន"</label>
+                        <label class="flex items-center gap-2 font-semibold text-slate-600"><input id="set-theme-3d" type="checkbox" class="accent-amber-800"> រចនាបថ 3D (ប៊ូតុង និងមុខម្ហូបមានជម្រៅ)</label>
                         <button onclick="saveShopSettings()" class="bg-amber-800 hover:bg-amber-900 text-white font-bold px-4 py-2 rounded-lg"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុក</button>
                     </div>
 
@@ -1755,6 +1865,7 @@
             document.getElementById('header-rate').innerText = `$1 = ${rate().toLocaleString('en-US')} ៛`;
             document.getElementById('large-size-label').innerText = `Large (+${fmtUSD(settings.largeExtra)})`;
             document.title = `🧪 TEST — ${settings.shopName}`;
+            document.body.classList.toggle('theme-3d', settings.theme3d !== false);
         }
         function fillSettingsForm() {
             fillExtraSettings();
@@ -1764,6 +1875,7 @@
             document.getElementById('set-rate').value = settings.rate;
             document.getElementById('set-footer').value = settings.footer;
             document.getElementById('set-auto-ticket').checked = !!settings.autoTicket;
+            document.getElementById('set-theme-3d').checked = settings.theme3d !== false;
             document.getElementById('set-large-extra').value = settings.largeExtra;
             document.getElementById('set-large-factor').value = settings.largeFactor;
             document.getElementById('topping-rows').innerHTML = '';
@@ -1782,7 +1894,8 @@
                 phone: document.getElementById('set-phone').value.trim(),
                 rate: Math.round(r),
                 footer: document.getElementById('set-footer').value.trim(),
-                autoTicket: document.getElementById('set-auto-ticket').checked
+                autoTicket: document.getElementById('set-auto-ticket').checked,
+                theme3d: document.getElementById('set-theme-3d').checked
             });
             audit('កែព័ត៌មានហាង', `${settings.shopName} • អត្រា ${settings.rate}`);
             saveJSON('cafe_settings', settings);
