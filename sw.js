@@ -1,7 +1,7 @@
 // Angkor Café POS — offline support
 // Page: network-first (always get the newest version when online, fall back to cache offline)
 // CDN assets (Tailwind, Font Awesome, Chart.js, Google Fonts): cache-first
-const CACHE = 'cafe-pos-v1';
+const CACHE = 'cafe-pos-v3';
 const CORE = ['./', './index.html', './manifest.json', './icon.svg'];
 const CDN_HOSTS = ['cdn.tailwindcss.com', 'cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
