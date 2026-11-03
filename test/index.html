@@ -3994,6 +3994,34 @@
             if (e.key === 'Escape') ['modal-checkout', 'modal-mixed', 'modal-split', 'modal-customer', 'modal-purchase', 'modal-count', 'modal-customization', 'modal-khqr', 'modal-receipt', 'modal-table-transfer', 'modal-ingredient', 'modal-menu', 'modal-staff'].forEach(closeModal);
         });
 
+        // ==================== NUMBER FIELDS WORK WITH THE KHMER KEYBOARD ====================
+        // Browsers reject Khmer digits (០-៩) in <input type="number">, so with a Khmer keyboard nothing can be typed.
+        // On focus such fields become text fields (numeric keypad on phones) and Khmer digits are turned into 0-9.
+        const KH_DIGITS = '០១២៣៤៥៦៧៨៩';
+        function khToAscii(s) { return String(s).replace(/[០-៩]/g, d => KH_DIGITS.indexOf(d)); }
+        document.addEventListener('focusin', e => {
+            const el = e.target;
+            if (el.tagName !== 'INPUT' || el.type !== 'number') return;
+            el.dataset.num = '1';
+            el.type = 'text';
+            if (!el.getAttribute('inputmode')) el.setAttribute('inputmode', 'decimal');
+            el.setAttribute('autocomplete', 'off');
+        }, true);
+        document.addEventListener('input', e => {
+            const el = e.target;
+            if (el.tagName !== 'INPUT') return;
+            const mode = el.getAttribute('inputmode');
+            if (!el.dataset.num && !['numeric', 'decimal', 'tel'].includes(mode)) return;
+            const v = el.value;
+            let n = khToAscii(v);
+            if (el.dataset.num) n = n.replace(/។/g, '.').replace(/[^\d.\-]/g, '');
+            if (n === v) return;
+            let pos = null;
+            try { pos = el.selectionStart; } catch (err) { }
+            el.value = n;
+            if (pos !== null) { pos = Math.max(0, pos - (v.length - n.length)); try { el.setSelectionRange(pos, pos); } catch (err) { } }
+        }, true);
+
         // ==================== EXTRA SETTINGS (VAT / loyalty / Telegram / auto-lock) ====================
         function fillExtraSettings() {
             const v = settings.vat, l = settings.loyalty, t = settings.telegram;
