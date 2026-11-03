@@ -194,30 +194,6 @@
                         <div class="flex justify-between text-emerald-700 text-sm font-bold"><span>ត្រូវបង់ (KHR):</span><span id="summary-total-khr">0 ៛</span></div>
                     </div>
 
-                    <div class="grid grid-cols-4 gap-1.5">
-                        <button onclick="setPaymentMethod('cash')" id="pay-btn-cash" class="pay-method-btn border border-amber-800 bg-amber-800 text-white font-bold py-2 rounded-lg text-xs flex flex-col items-center gap-0.5"><i class="fa-solid fa-money-bill-wave"></i> សាច់ប្រាក់</button>
-                        <button onclick="setPaymentMethod('khqr')" id="pay-btn-khqr" class="pay-method-btn border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold py-2 rounded-lg text-xs flex flex-col items-center gap-0.5"><i class="fa-solid fa-qrcode text-red-600"></i> KHQR</button>
-                        <button onclick="setPaymentMethod('card')" id="pay-btn-card" class="pay-method-btn border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold py-2 rounded-lg text-xs flex flex-col items-center gap-0.5"><i class="fa-solid fa-credit-card text-blue-600"></i> កាត</button>
-                        <button onclick="setPaymentMethod('mixed')" id="pay-btn-mixed" class="pay-method-btn border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold py-2 rounded-lg text-xs flex flex-col items-center gap-0.5"><i class="fa-solid fa-layer-group text-violet-600"></i> ចម្រុះ</button>
-                    </div>
-
-                    <div id="cash-input-box" class="space-y-2 text-xs">
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-[10px] text-slate-500 font-semibold mb-0.5">ទទួល ដុល្លារ ($)</label>
-                                <input type="number" id="cash-received-usd" oninput="calculateChange()" placeholder="0" step="0.5" min="0" class="w-full px-2 py-1.5 border rounded-lg focus:ring-1 focus:ring-amber-600 outline-none font-bold text-slate-800">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] text-slate-500 font-semibold mb-0.5">ទទួល រៀល (៛)</label>
-                                <input type="number" id="cash-received-khr" oninput="calculateChange()" placeholder="0" step="100" min="0" class="w-full px-2 py-1.5 border rounded-lg focus:ring-1 focus:ring-amber-600 outline-none font-bold text-slate-800">
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between bg-white border rounded-lg px-2 py-1.5">
-                            <span class="text-[10px] text-slate-500 font-semibold">ប្រាក់អាប់:</span>
-                            <span id="cash-change-display" class="font-bold text-emerald-700">ទុកទទេ = បង់គ្រប់ចំនួន</span>
-                        </div>
-                    </div>
-
                     <div class="flex gap-2">
                         <button onclick="holdTableOrder()" class="flex-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold py-2.5 rounded-lg text-xs transition flex items-center justify-center gap-1"><i class="fa-solid fa-paper-plane"></i> បញ្ជូន/រក្សាទុក (Hold)</button>
                         <button onclick="processTableCheckout()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 rounded-lg text-xs shadow-md transition flex items-center justify-center gap-1"><i class="fa-solid fa-print"></i> គិតលុយ</button>
@@ -825,6 +801,77 @@
             <div class="bg-slate-100 px-4 py-3 border-t border-slate-200 flex gap-2">
                 <button onclick="closeModal('modal-receipt')" class="flex-1 py-2 text-xs font-bold bg-slate-300 rounded-lg">បិទ</button>
                 <button onclick="printSection('print-receipt')" class="flex-1 py-2 text-xs font-bold bg-amber-800 text-white rounded-lg"><i class="fa-solid fa-print"></i> បោះពុម្ព</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: Checkout ================= -->
+    <div id="modal-checkout" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-3">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden flex flex-col max-h-[95vh]">
+            <div class="bg-emerald-800 text-white px-4 py-3 flex justify-between items-center">
+                <h3 class="font-bold text-sm"><i class="fa-solid fa-cash-register"></i> គិតលុយ — <span id="co-table">-</span></h3>
+                <button onclick="closeModal('modal-checkout')" class="text-white font-bold text-xl leading-none">&times;</button>
+            </div>
+            <div class="p-4 space-y-3 text-xs overflow-y-auto">
+                <div class="text-center bg-slate-50 border border-slate-200 rounded-xl py-3">
+                    <p class="text-slate-500 font-semibold">ត្រូវបង់</p>
+                    <p id="co-total-usd" class="text-4xl font-bold text-slate-800 leading-tight">$0.00</p>
+                    <p id="co-total-khr" class="text-lg font-bold text-emerald-700">0 ៛</p>
+                    <p id="co-breakdown" class="text-[11px] text-slate-500 mt-1"></p>
+                </div>
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="setPaymentMethod('cash')" id="pay-btn-cash" class="pay-method-btn border border-amber-800 bg-amber-800 text-white font-bold py-3 rounded-xl text-xs flex flex-col items-center gap-1"><i class="fa-solid fa-money-bill-wave text-lg"></i> សាច់ប្រាក់</button>
+                    <button onclick="setPaymentMethod('khqr')" id="pay-btn-khqr" class="pay-method-btn border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold py-3 rounded-xl text-xs flex flex-col items-center gap-1"><i class="fa-solid fa-qrcode text-lg text-red-600"></i> KHQR</button>
+                    <button onclick="setPaymentMethod('card')" id="pay-btn-card" class="pay-method-btn border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold py-3 rounded-xl text-xs flex flex-col items-center gap-1"><i class="fa-solid fa-credit-card text-lg text-blue-600"></i> កាត</button>
+                    <button onclick="setPaymentMethod('mixed')" id="pay-btn-mixed" class="pay-method-btn border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold py-3 rounded-xl text-xs flex flex-col items-center gap-1"><i class="fa-solid fa-layer-group text-lg text-violet-600"></i> ចម្រុះ</button>
+                </div>
+
+                <div id="cash-input-box" class="space-y-2">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[11px] text-slate-500 font-semibold mb-0.5">ទទួល ដុល្លារ ($)</label>
+                            <input type="number" id="cash-received-usd" oninput="calculateChange()" placeholder="0" step="0.5" min="0" inputmode="decimal" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-600 outline-none font-bold text-lg text-slate-800">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-500 font-semibold mb-0.5">ទទួល រៀល (៛)</label>
+                            <input type="number" id="cash-received-khr" oninput="calculateChange()" placeholder="0" step="100" min="0" inputmode="numeric" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-600 outline-none font-bold text-lg text-slate-800">
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button type="button" onclick="quickCash('exact')" class="px-3 py-1.5 bg-emerald-100 text-emerald-800 font-bold rounded-lg">គ្រប់ចំនួន</button>
+                        <button type="button" onclick="quickCash('usd',5)" class="px-3 py-1.5 bg-slate-100 font-bold rounded-lg">$5</button>
+                        <button type="button" onclick="quickCash('usd',10)" class="px-3 py-1.5 bg-slate-100 font-bold rounded-lg">$10</button>
+                        <button type="button" onclick="quickCash('usd',20)" class="px-3 py-1.5 bg-slate-100 font-bold rounded-lg">$20</button>
+                        <button type="button" onclick="quickCash('usd',50)" class="px-3 py-1.5 bg-slate-100 font-bold rounded-lg">$50</button>
+                        <button type="button" onclick="quickCash('khr',10000)" class="px-3 py-1.5 bg-slate-100 font-bold rounded-lg">10,000៛</button>
+                        <button type="button" onclick="quickCash('khr',20000)" class="px-3 py-1.5 bg-slate-100 font-bold rounded-lg">20,000៛</button>
+                        <button type="button" onclick="quickCash('khr',50000)" class="px-3 py-1.5 bg-slate-100 font-bold rounded-lg">50,000៛</button>
+                    </div>
+                    <div class="flex items-center justify-between bg-slate-50 border rounded-xl px-3 py-2.5">
+                        <span class="text-sm text-slate-600 font-bold">ប្រាក់អាប់:</span>
+                        <span id="cash-change-display" class="font-bold text-lg text-emerald-700">ទុកទទេ = បង់គ្រប់ចំនួន</span>
+                    </div>
+                </div>
+
+                <div id="co-khqr-box" class="hidden space-y-2 text-center">
+                    <div class="inline-block bg-slate-50 p-3 rounded-xl border border-slate-200"><div id="co-khqr-img" class="flex justify-center"></div></div>
+                    <div class="text-left"><label class="block font-bold text-slate-700 mb-1">លេខយោងប្រតិបត្តិការ (Ref) <span class="text-slate-400 font-normal">— ៤-៦ ខ្ទង់ចុងក្រោយ</span></label>
+                        <input id="co-khqr-ref" maxlength="20" placeholder="ឧ. 482913" class="w-full p-2 border rounded-lg outline-none"></div>
+                    <p class="text-[11px] text-rose-600 font-semibold">⚠️ ពិនិត្យសារជូនដំណឹងពីធនាគារ មុនចុចបញ្ជាក់</p>
+                </div>
+
+                <div id="co-card-box" class="hidden">
+                    <label class="block font-bold text-slate-700 mb-1">លេខយោងកាត (ស្រេចចិត្ត)</label>
+                    <input id="co-card-ref" maxlength="20" class="w-full p-2 border rounded-lg outline-none">
+                </div>
+
+                <div id="co-mixed-box" class="hidden text-center text-slate-600 bg-violet-50 border border-violet-200 rounded-xl p-3">
+                    បង់ច្រើនវិធីក្នុងវិក្កយបត្រតែមួយ (ឧ. សាច់ប្រាក់ + KHQR) ឬចែកស្មើគ្នា — ចុច <strong>បន្ត</strong>
+                </div>
+            </div>
+            <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 flex gap-2">
+                <button onclick="closeModal('modal-checkout')" class="flex-1 py-3 text-sm font-semibold bg-slate-200 hover:bg-slate-300 rounded-xl">បោះបង់</button>
+                <button id="co-confirm" onclick="confirmCheckout()" class="flex-[2] py-3 text-sm font-bold bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl shadow-md"><i class="fa-solid fa-check"></i> បញ្ជាក់ការទូទាត់</button>
             </div>
         </div>
     </div>
@@ -2285,6 +2332,52 @@
             btn.classList.add('bg-amber-800', 'text-white', 'border-amber-800');
             btn.classList.remove('bg-white', 'text-slate-700', 'border-slate-300');
             document.getElementById('cash-input-box').classList.toggle('hidden', method !== 'cash');
+            document.getElementById('co-khqr-box').classList.toggle('hidden', method !== 'khqr');
+            document.getElementById('co-card-box').classList.toggle('hidden', method !== 'card');
+            document.getElementById('co-mixed-box').classList.toggle('hidden', method !== 'mixed');
+            document.getElementById('co-confirm').innerHTML = method === 'mixed' ? 'បន្ត <i class="fa-solid fa-arrow-right"></i>' : '<i class="fa-solid fa-check"></i> បញ្ជាក់ការទូទាត់';
+            if (method === 'khqr') {
+                const img = getKhqr();
+                document.getElementById('co-khqr-img').innerHTML = img ? `<img src="${safeImg(img)}" alt="KHQR" class="w-44 h-auto rounded">`
+                    : '<p class="w-44 py-4 text-slate-500">មិនទាន់មានរូប KHQR<br>(ការកំណត់ → KHQR)</p>';
+                setTimeout(() => document.getElementById('co-khqr-ref').focus(), 50);
+            }
+            if (method === 'cash' && isOpen('modal-checkout')) setTimeout(() => document.getElementById('cash-received-usd').focus(), 50);
+        }
+        // Checkout pop-up: opens when the cashier taps "គិតលុយ"
+        function openCheckoutModal() {
+            const tbl = tablesState[activeTableId];
+            const t = getTableTotals(tbl);
+            document.getElementById('co-table').innerText = tbl.name;
+            document.getElementById('co-total-usd').innerText = fmtUSD(t.totalUSD);
+            document.getElementById('co-total-khr').innerText = fmtKHR(t.totalUSD);
+            document.getElementById('co-breakdown').innerText = [`សរុបរង ${fmtUSD(t.subtotal)}`, t.discountAmount ? `បញ្ចុះ -${fmtUSD(t.discountAmount)}` : '',
+                t.redeemUSD ? `ពិន្ទុ -${fmtUSD(t.redeemUSD)}` : '', vatOn() ? `VAT ${fmtUSD(t.vatUSD)}${settings.vat.inclusive ? ' (រួម)' : ''}` : ''].filter(Boolean).join(' • ');
+            ['cash-received-usd', 'cash-received-khr', 'co-khqr-ref', 'co-card-ref'].forEach(id => { document.getElementById(id).value = ''; });
+            openModal('modal-checkout');
+            setPaymentMethod('cash');
+            calculateChange();
+        }
+        function quickCash(kind, amount) {
+            const u = document.getElementById('cash-received-usd'), k = document.getElementById('cash-received-khr');
+            if (kind === 'exact') { u.value = ''; k.value = ''; }
+            else if (kind === 'usd') { u.value = amount; k.value = ''; }
+            else { k.value = amount; u.value = ''; }
+            calculateChange();
+        }
+        function confirmCheckout() {
+            const tbl = tablesState[activeTableId];
+            if (!tbl.cart.length) { closeModal('modal-checkout'); return; }
+            const { totalUSD } = getTableTotals(tbl);
+            const m = selectedPaymentMethod;
+            if (m === 'cash') {
+                const paid = getCashPaid();
+                if (paid && paid.totalUSD - totalUSD <= -0.01) { showToast("ប្រាក់ទទួលមិនគ្រប់ចំនួនទេ!", "warning"); return; }
+            }
+            closeModal('modal-checkout');
+            if (m === 'mixed') { openMixedModal(totalUSD); return; }
+            const ref = m === 'khqr' ? document.getElementById('co-khqr-ref').value.trim() : m === 'card' ? document.getElementById('co-card-ref').value.trim() : '';
+            executeFinalPayment(m, ref);
         }
         function getCashPaid() {
             const u = document.getElementById('cash-received-usd').value;
@@ -2343,14 +2436,7 @@
         function processTableCheckout() {
             const tbl = tablesState[activeTableId];
             if (!tbl.cart.length) { showToast("គ្មានទំនិញក្នុងតុនេះដើម្បីគិតលុយទេ!", "warning"); return; }
-            const { totalUSD } = getTableTotals(tbl);
-            if (selectedPaymentMethod === 'cash') {
-                const paid = getCashPaid();
-                if (paid && paid.totalUSD - totalUSD <= -0.01) { showToast("ប្រាក់ទទួលមិនគ្រប់ចំនួនទេ!", "warning"); return; }
-            }
-            if (selectedPaymentMethod === 'khqr') { openKhqrModal(totalUSD); return; }
-            if (selectedPaymentMethod === 'mixed') { openMixedModal(totalUSD); return; }
-            executeFinalPayment(selectedPaymentMethod, '');
+            openCheckoutModal();
         }
         function openKhqrModal(amountUSD) {
             document.getElementById('khqr-amount-usd').innerText = fmtUSD(amountUSD);
@@ -3618,8 +3704,9 @@
                 if (e.key === 'Escape') resolveApprove(false);
                 return;
             }
+            if (e.key === 'Enter' && isOpen('modal-checkout')) { e.preventDefault(); confirmCheckout(); return; }
             if (e.key === 'Enter' && isOpen('modal-customization') && document.activeElement.tagName !== 'BUTTON') { confirmAddToCart(); return; }
-            if (e.key === 'Escape') ['modal-mixed', 'modal-split', 'modal-customer', 'modal-purchase', 'modal-count', 'modal-customization', 'modal-khqr', 'modal-receipt', 'modal-table-transfer', 'modal-ingredient', 'modal-menu', 'modal-staff'].forEach(closeModal);
+            if (e.key === 'Escape') ['modal-checkout', 'modal-mixed', 'modal-split', 'modal-customer', 'modal-purchase', 'modal-count', 'modal-customization', 'modal-khqr', 'modal-receipt', 'modal-table-transfer', 'modal-ingredient', 'modal-menu', 'modal-staff'].forEach(closeModal);
         });
 
         // ==================== EXTRA SETTINGS (VAT / loyalty / Telegram / auto-lock) ====================
