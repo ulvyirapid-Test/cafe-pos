@@ -174,6 +174,7 @@
                 </div>
                 <p id="login-error" class="text-center text-xs text-rose-600 font-semibold h-4"></p>
                 <p id="login-default-hint" class="hidden text-center text-[10px] text-slate-400">PIN លំនាំដើម៖ Manager 1234 • Cashier 0000 (សូមប្តូរភ្លាមៗ)</p>
+                <button onclick="openForgotPin()" class="w-full text-center text-xs font-semibold text-amber-800 hover:underline"><i class="fa-solid fa-key"></i> ភ្លេច PIN?</button>
             </div>
         </div>
     </div>
@@ -630,6 +631,11 @@
                             </div>
                             <div class="overflow-x-auto"><table class="w-full text-left"><thead class="bg-slate-100"><tr><th class="p-1.5">សិទ្ធិ</th><th class="p-1.5 text-center">Manager</th><th class="p-1.5 text-center">Cashier</th></tr></thead><tbody id="role-perm-rows"></tbody></table></div>
                         </div>
+                        <div class="border-t border-slate-100 pt-2 flex items-center justify-between gap-2 flex-wrap">
+                            <div><span class="font-bold text-slate-700"><i class="fa-solid fa-key text-amber-800"></i> លេខកូដសង្គ្រោះ (ភ្លេច PIN)</span>
+                                <p id="rc-status" class="text-[10px] text-slate-500"></p></div>
+                            <button onclick="generateRecoveryCode()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-1.5 rounded-lg"><i class="fa-solid fa-rotate"></i> បង្កើតលេខកូដថ្មី</button>
+                        </div>
                         <p class="text-[10px] text-slate-400">បើគ្មានសិទ្ធិ៖ ផ្ទាំងនោះត្រូវលាក់ ហើយសកម្មភាព (Void, បញ្ចុះតម្លៃ...) ត្រូវការ PIN របស់អ្នកដែលមានសិទ្ធិនោះ។ អាចកំណត់សិទ្ធិផ្ទាល់ខ្លួនសម្រាប់ម្នាក់ៗ ពេលចុច "កែប្រែ"។</p>
                     </div>
                 </div>
@@ -914,6 +920,51 @@
             <div class="bg-slate-100 px-4 py-3 border-t border-slate-200 flex gap-2">
                 <button onclick="closeModal('modal-receipt')" class="flex-1 py-2 text-xs font-bold bg-slate-300 rounded-lg">បិទ</button>
                 <button onclick="printSection('print-receipt')" class="flex-1 py-2 text-xs font-bold bg-amber-800 text-white rounded-lg"><i class="fa-solid fa-print"></i> បោះពុម្ព</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: Forgot PIN (recovery code) ================= -->
+    <div id="modal-forgot" class="fixed inset-0 bg-slate-900/70 hidden items-center justify-center z-[80] p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm overflow-hidden">
+            <div class="bg-amber-900 text-white px-4 py-3 flex justify-between items-center">
+                <h3 class="font-bold text-sm"><i class="fa-solid fa-key"></i> ភ្លេច PIN — កំណត់ PIN ថ្មី</h3>
+                <button onclick="closeModal('modal-forgot')" class="text-white font-bold text-lg">&times;</button>
+            </div>
+            <div class="p-4 space-y-3 text-xs">
+                <p id="fp-intro" class="text-slate-600">បញ្ចូល <strong>លេខកូដសង្គ្រោះ</strong> ដែល Manager បានបង្កើត និងរក្សាទុក។</p>
+                <div><label class="block font-bold text-slate-700 mb-1">គណនី Manager</label><select id="fp-user" class="w-full p-2 border rounded-lg outline-none"></select></div>
+                <div><label class="block font-bold text-slate-700 mb-1">លេខកូដសង្គ្រោះ</label>
+                    <input id="fp-code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX" class="w-full p-2 border rounded-lg outline-none font-mono text-sm tracking-wider uppercase"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="block font-bold text-slate-700 mb-1">PIN ថ្មី (៦ ខ្ទង់)</label><input id="fp-pin" type="password" inputmode="numeric" maxlength="6" class="w-full p-2 border rounded-lg outline-none text-center tracking-widest"></div>
+                    <div><label class="block font-bold text-slate-700 mb-1">បញ្ជាក់ PIN</label><input id="fp-pin2" type="password" inputmode="numeric" maxlength="6" class="w-full p-2 border rounded-lg outline-none text-center tracking-widest"></div>
+                </div>
+                <p id="fp-msg" class="text-rose-600 font-semibold min-h-[1rem]"></p>
+            </div>
+            <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 flex gap-2">
+                <button onclick="closeModal('modal-forgot')" class="flex-1 py-2 text-xs font-semibold bg-slate-200 rounded-lg">បោះបង់</button>
+                <button id="fp-submit" onclick="submitForgotPin()" class="flex-1 py-2 text-xs font-bold bg-amber-800 hover:bg-amber-900 text-white rounded-lg">កំណត់ PIN ថ្មី</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: Show new recovery code ================= -->
+    <div id="modal-recovery" class="fixed inset-0 bg-slate-900/70 hidden items-center justify-center z-[80] p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm overflow-hidden">
+            <div class="bg-emerald-800 text-white px-4 py-3"><h3 class="font-bold text-sm"><i class="fa-solid fa-shield-halved"></i> លេខកូដសង្គ្រោះថ្មី</h3></div>
+            <div class="p-4 space-y-3 text-xs text-center">
+                <p class="text-slate-600">ប្រើលេខកូដនេះពេល Manager ភ្លេច PIN។ <strong>វាបង្ហាញតែម្តងនេះប៉ុណ្ណោះ</strong>។</p>
+                <div id="rc-code" class="font-mono text-xl font-bold tracking-wider bg-amber-50 border-2 border-dashed border-amber-400 rounded-xl py-4 select-all text-slate-900"></div>
+                <div class="flex gap-2 justify-center">
+                    <button onclick="copyRecoveryCode()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 font-bold rounded-lg"><i class="fa-solid fa-copy"></i> Copy</button>
+                    <button onclick="downloadRecoveryCode()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 font-bold rounded-lg"><i class="fa-solid fa-download"></i> រក្សាទុកជាឯកសារ</button>
+                </div>
+                <p class="text-left text-slate-500">✔ សរសេរលើក្រដាស ហើយទុកក្នុងទូរ/កន្លែងមានសោ<br>✔ កុំផ្ញើតាម Telegram ឬទុកលើ Tablet<br>✔ ប្រើបានតែ <strong>១ ដង</strong> ក្រោយប្រើត្រូវបង្កើតថ្មី</p>
+                <label class="flex items-center gap-2 justify-center font-semibold text-slate-700"><input id="rc-ack" type="checkbox" class="accent-emerald-700"> ខ្ញុំបានរក្សាទុកលេខកូដរួចហើយ</label>
+            </div>
+            <div class="bg-slate-50 px-4 py-3 border-t border-slate-200">
+                <button onclick="closeRecoveryModal()" class="w-full py-2 text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg">រួចរាល់</button>
             </div>
         </div>
     </div>
@@ -1721,6 +1772,8 @@
             loginSelectedId = null;
             setCurrentUser(user);
             audit('Login', user.role);
+            if (can('staff', user) && !(settings.recovery && settings.recovery.hash) && !user.pinDefault)
+                setTimeout(() => showToast("💡 សូមបង្កើតលេខកូដសង្គ្រោះ (ការកំណត់ → បុគ្គលិក) ដើម្បីកុំឲ្យជាប់ពេលភ្លេច PIN", "info"), 2500);
             showToast(`សូមស្វាគមន៍ ${user.name}!`, "success");
             if (user.pinDefault) openMyPinModal(true);
         }
@@ -3914,10 +3967,15 @@
             if (tabId === 'analytics') renderAnalytics();
             if (tabId === 'shift') renderShift();
             if (tabId === 'customers') renderCustomers();
-            if (tabId === 'settings') { document.querySelectorAll('#tab-settings [data-sec]').forEach(el => el.classList.toggle('hidden', !can(el.dataset.sec))); renderRolePerms(); renderSecurity(false); fillCloudForm(); fillSettingsForm(); renderStaffList(); renderSettingsMenuList(); renderKhqrSettingsPreview(); renderStorageUsage(); }
+            if (tabId === 'settings') { renderRecoveryStatus(); document.querySelectorAll('#tab-settings [data-sec]').forEach(el => el.classList.toggle('hidden', !can(el.dataset.sec))); renderRolePerms(); renderSecurity(false); fillCloudForm(); fillSettingsForm(); renderStaffList(); renderSettingsMenuList(); renderKhqrSettingsPreview(); renderStorageUsage(); }
         }
 
         document.addEventListener('keydown', e => {
+            if (isOpen('modal-forgot') || isOpen('modal-recovery')) {
+                if (e.key === 'Escape' && isOpen('modal-forgot')) closeModal('modal-forgot');
+                if (e.key === 'Enter' && isOpen('modal-forgot')) submitForgotPin();
+                return;
+            }
             const loginOpen = !document.getElementById('login-overlay').classList.contains('hidden');
             if (loginOpen) {
                 if (/^\d$/.test(e.key)) pinPress(e.key);
@@ -4533,6 +4591,7 @@
             const lastB = Number(loadJSON('cafe_last_backup', 0)) || 0;
             add(cloudOn() || (Date.now() - lastB < 7 * 86400000), cloudOn() ? 'Cloud Sync បើក ✓' : (lastB ? `Backup ចុងក្រោយ ${fmtDate(new Date(lastB).toISOString())}` : 'មិនដែល Backup'), 'បើក Cloud Sync ឬ Export Backup');
             add(tgReady() && settings.telegram.onSecurity !== false, tgReady() ? 'Telegram ជូនដំណឹងសុវត្ថិភាព ✓' : 'Telegram មិនទាន់កំណត់', 'កំណត់ Bot ខាងក្រោម');
+            add(!!(settings.recovery && settings.recovery.hash), settings.recovery && settings.recovery.hash ? 'មានលេខកូដសង្គ្រោះ (ភ្លេច PIN) ✓' : 'មិនទាន់មានលេខកូដសង្គ្រោះ', 'បុគ្គលិក → បង្កើតលេខកូដថ្មី');
             add(Store.mode === 'idb' && Store.persisted, Store.persisted ? 'ទិន្នន័យរក្សាអចិន្ត្រៃយ៍ ✓' : 'Browser មិនទាន់អនុញ្ញាតរក្សាអចិន្ត្រៃយ៍', 'Install ជា App (Add to Home Screen)');
             const score = checks.filter(c => c.ok).length;
             document.getElementById('sec-checklist').innerHTML = `<div class="md:col-span-2 font-bold ${score === checks.length ? 'text-emerald-700' : 'text-amber-700'}">ពិន្ទុការកំណត់៖ ${score}/${checks.length}</div>` +
@@ -4555,6 +4614,103 @@
             const log = loadJSON('cafe_audit', []);
             downloadCSV(`cafe-audit-${new Date().toISOString().slice(0, 10)}.csv`, [['#', 'Time', 'User', 'Action', 'Detail', 'Device', 'Hash'], ...log.map(e => [e.seq, e.ts, e.user, e.action, e.detail, e.device, e.h])]);
             audit('Export Audit Log', `${log.length} កំណត់ត្រា`);
+        }
+
+        // ==================== FORGOT PIN: one-time recovery code ====================
+        // Only a PBKDF2 hash of the code is stored (in settings, so it follows the staff list).
+        const RC_ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I to avoid misreading
+        let shownRecoveryCode = '';
+        function normCode(c) { return String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+        function fmtCode(c) { return c.match(/.{1,4}/g).join('-'); }
+        function renderRecoveryStatus() {
+            const el = document.getElementById('rc-status'); if (!el) return;
+            const r = settings.recovery;
+            el.innerHTML = r && r.hash ? `<span class="text-emerald-700">✓ មានលេខកូដ — បង្កើត ${fmtDate(r.createdAt)} ដោយ ${esc(r.createdBy || '-')}</span>`
+                : '<span class="text-rose-600 font-semibold">⚠️ មិនទាន់មាន — បើភ្លេច PIN នឹងមិនអាចចូលបាន</span>';
+        }
+        async function generateRecoveryCode() {
+            if (!need('staff')) return;
+            if (!hasSubtle) { showToast("ត្រូវបើក POS តាម https ដើម្បីបង្កើតលេខកូដ", "warning"); return; }
+            if (settings.recovery && settings.recovery.hash && !confirm('បង្កើតលេខកូដថ្មី? លេខកូដចាស់នឹងលែងប្រើបាន។')) return;
+            const bytes = new Uint8Array(16); crypto.getRandomValues(bytes);
+            const code = [...bytes].map(b => RC_ALPHA[b % RC_ALPHA.length]).join('');
+            const salt = randHex(16), iter = 150000;
+            settings.recovery = { hash: `pbkdf2$${iter}$${salt}$${await pbkdf2Hex(code, salt, iter)}`, createdAt: new Date().toISOString(), createdBy: currentUser.name };
+            saveJSON('cafe_settings', settings);
+            pushConfig('settings');
+            audit('បង្កើតលេខកូដសង្គ្រោះ', 'លេខកូដចាស់ (បើមាន) លែងប្រើបាន', true);
+            shownRecoveryCode = fmtCode(code);
+            document.getElementById('rc-code').innerText = shownRecoveryCode;
+            document.getElementById('rc-ack').checked = false;
+            openModal('modal-recovery');
+            renderRecoveryStatus();
+        }
+        function copyRecoveryCode() {
+            try { navigator.clipboard.writeText(shownRecoveryCode).then(() => showToast("បាន Copy", "success")); }
+            catch (e) { showToast("Copy មិនបាន — សូមសរសេរដោយដៃ", "warning"); }
+        }
+        function downloadRecoveryCode() {
+            const txt = `${settings.shopName} — POS\nលេខកូដសង្គ្រោះ (ភ្លេច PIN)\n\n${shownRecoveryCode}\n\nបង្កើត: ${new Date().toLocaleString('en-GB')} ដោយ ${currentUser ? currentUser.name : ''}\nប្រើបាន ១ ដង។ ទុកក្នុងកន្លែងមានសុវត្ថិភាព ហើយលុបឯកសារនេះពី Tablet។\n`;
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain;charset=utf-8' }));
+            a.download = 'cafe-pos-recovery-code.txt'; a.click();
+            setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+        }
+        function closeRecoveryModal() {
+            if (!document.getElementById('rc-ack').checked) { showToast("សូមរក្សាទុកលេខកូដ ហើយធីក ✓ ជាមុន", "warning"); return; }
+            shownRecoveryCode = '';
+            document.getElementById('rc-code').innerText = '';
+            closeModal('modal-recovery');
+        }
+        // Wrong codes are rate-limited across reloads: 5 tries, then 15 minutes
+        function rcLock() { return loadJSON('cafe_recovery_lock', { fails: 0, until: 0 }); }
+        function openForgotPin() {
+            const admins = staff.filter(s => can('staff', s));
+            document.getElementById('fp-user').innerHTML = admins.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+            ['fp-code', 'fp-pin', 'fp-pin2'].forEach(id => { document.getElementById(id).value = ''; });
+            const has = !!(settings.recovery && settings.recovery.hash);
+            document.getElementById('fp-msg').innerText = has ? '' : 'POS នេះមិនទាន់មានលេខកូដសង្គ្រោះទេ។ សូមឲ្យ Manager ផ្សេង Login ហើយកែ PIN ឲ្យ។';
+            document.getElementById('fp-submit').disabled = !has;
+            document.getElementById('fp-submit').classList.toggle('opacity-40', !has);
+            openModal('modal-forgot');
+            setTimeout(() => document.getElementById('fp-code').focus(), 50);
+        }
+        async function submitForgotPin() {
+            const msg = document.getElementById('fp-msg');
+            const lock = rcLock();
+            if (Date.now() < lock.until) { msg.innerText = `បញ្ចូលខុសច្រើនដង — សូមរង់ចាំ ${Math.ceil((lock.until - Date.now()) / 60000)} នាទី`; return; }
+            const r = settings.recovery;
+            if (!r || !r.hash || !hasSubtle) { msg.innerText = 'មិនមានលេខកូដសង្គ្រោះ'; return; }
+            const user = staff.find(s => s.id === parseInt(document.getElementById('fp-user').value));
+            const code = normCode(document.getElementById('fp-code').value);
+            const p1 = document.getElementById('fp-pin').value.trim(), p2 = document.getElementById('fp-pin2').value.trim();
+            if (!user) { msg.innerText = 'សូមជ្រើសគណនី'; return; }
+            if (code.length !== 16) { msg.innerText = 'លេខកូដត្រូវមាន ១៦ តួ (XXXX-XXXX-XXXX-XXXX)'; return; }
+            if (p1 !== p2) { msg.innerText = 'PIN ថ្មី និង បញ្ជាក់ មិនដូចគ្នា'; return; }
+            if (!/^\d{6}$/.test(p1)) { msg.innerText = 'PIN ថ្មីត្រូវតែជាលេខ ៦ ខ្ទង់'; return; }
+            const w = weakPin(p1); if (w) { msg.innerText = w; return; }
+            msg.innerText = '...';
+            const [, iter, salt, h] = r.hash.split('$');
+            if ((await pbkdf2Hex(code, salt, parseInt(iter))) !== h) {
+                lock.fails = (lock.fails || 0) + 1;
+                if (lock.fails >= 5) { lock.until = Date.now() + 15 * 60000; lock.fails = 0; audit('លេខកូដសង្គ្រោះចាក់សោ', `ខុស ៥ ដង — ${user.name}`, true); }
+                saveJSON('cafe_recovery_lock', lock);
+                audit('លេខកូដសង្គ្រោះខុស', user.name);
+                msg.innerText = 'លេខកូដសង្គ្រោះមិនត្រឹមត្រូវ';
+                return;
+            }
+            if (await findStaffByPin(p1, staff.filter(s => s.id !== user.id))) { msg.innerText = 'PIN នេះមានគេប្រើរួចហើយ'; return; }
+            user.pin = await makePinHash(p1);
+            user.pinDefault = false;
+            delete settings.recovery;           // one-time use
+            saveJSON('cafe_settings', settings);
+            pushConfig('settings');
+            saveJSON('cafe_recovery_lock', { fails: 0, until: 0 });
+            staffChanged();
+            audit('កំណត់ PIN ថ្មីដោយលេខកូដសង្គ្រោះ', `${user.name} — លេខកូដត្រូវបានប្រើ ហើយលែងប្រើបាន`, true);
+            closeModal('modal-forgot');
+            selectLoginStaff(user.id);
+            showToast(`បានកំណត់ PIN ថ្មីសម្រាប់ ${user.name} — សូម Login ហើយបង្កើតលេខកូដសង្គ្រោះថ្មី`, "success");
         }
 
 
