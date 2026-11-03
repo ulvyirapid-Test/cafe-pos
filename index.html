@@ -187,30 +187,6 @@
                         <div class="flex justify-between text-emerald-700 text-sm font-bold"><span>ត្រូវបង់ (KHR):</span><span id="summary-total-khr">0 ៛</span></div>
                     </div>
 
-                    <div class="grid grid-cols-4 gap-1.5">
-                        <button onclick="setPaymentMethod('cash')" id="pay-btn-cash" class="pay-method-btn border border-amber-800 bg-amber-800 text-white font-bold py-2 rounded-lg text-xs flex flex-col items-center gap-0.5"><i class="fa-solid fa-money-bill-wave"></i> សាច់ប្រាក់</button>
-                        <button onclick="setPaymentMethod('khqr')" id="pay-btn-khqr" class="pay-method-btn border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold py-2 rounded-lg text-xs flex flex-col items-center gap-0.5"><i class="fa-solid fa-qrcode text-red-600"></i> KHQR</button>
-                        <button onclick="setPaymentMethod('card')" id="pay-btn-card" class="pay-method-btn border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold py-2 rounded-lg text-xs flex flex-col items-center gap-0.5"><i class="fa-solid fa-credit-card text-blue-600"></i> កាត</button>
-                        <button onclick="setPaymentMethod('mixed')" id="pay-btn-mixed" class="pay-method-btn border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold py-2 rounded-lg text-xs flex flex-col items-center gap-0.5"><i class="fa-solid fa-layer-group text-violet-600"></i> ចម្រុះ</button>
-                    </div>
-
-                    <div id="cash-input-box" class="space-y-2 text-xs">
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-[10px] text-slate-500 font-semibold mb-0.5">ទទួល ដុល្លារ ($)</label>
-                                <input type="number" id="cash-received-usd" oninput="calculateChange()" placeholder="0" step="0.5" min="0" class="w-full px-2 py-1.5 border rounded-lg focus:ring-1 focus:ring-amber-600 outline-none font-bold text-slate-800">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] text-slate-500 font-semibold mb-0.5">ទទួល រៀល (៛)</label>
-                                <input type="number" id="cash-received-khr" oninput="calculateChange()" placeholder="0" step="100" min="0" class="w-full px-2 py-1.5 border rounded-lg focus:ring-1 focus:ring-amber-600 outline-none font-bold text-slate-800">
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between bg-white border rounded-lg px-2 py-1.5">
-                            <span class="text-[10px] text-slate-500 font-semibold">ប្រាក់អាប់:</span>
-                            <span id="cash-change-display" class="font-bold text-emerald-700">ទុកទទេ = បង់គ្រប់ចំនួន</span>
-                        </div>
-                    </div>
-
                     <div class="flex gap-2">
                         <button onclick="holdTableOrder()" class="flex-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold py-2.5 rounded-lg text-xs transition flex items-center justify-center gap-1"><i class="fa-solid fa-paper-plane"></i> បញ្ជូន/រក្សាទុក (Hold)</button>
                         <button onclick="processTableCheckout()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 rounded-lg text-xs shadow-md transition flex items-center justify-center gap-1"><i class="fa-solid fa-print"></i> គិតលុយ</button>
@@ -599,6 +575,18 @@
                         <div><label class="block font-semibold text-slate-600 mb-0.5">តម្លៃបន្ថែម Large ($)</label><input id="set-large-extra" type="number" step="0.05" min="0" class="w-full p-2 border rounded-lg outline-none"></div>
                         <div><label class="block font-semibold text-slate-600 mb-0.5">Large ប្រើវត្ថុធាតុ × (ឧ. 1.3)</label><input id="set-large-factor" type="number" step="0.05" min="1" class="w-full p-2 border rounded-lg outline-none"></div>
                     </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-semibold text-slate-600 mb-0.5">កម្រិតស្ករ (បំបែកដោយក្បៀស ,)</label>
+                            <input id="set-sugar-levels" placeholder="0%, 25%, 50%, 75%, 100%" class="w-full p-2 border rounded-lg outline-none">
+                            <div class="flex items-center gap-2 mt-1"><span class="text-slate-600">លំនាំដើម</span><select id="set-sugar-default" class="p-1.5 border rounded-lg outline-none"></select></div>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-600 mb-0.5">កម្រិតទឹកកក (បំបែកដោយក្បៀស ,)</label>
+                            <input id="set-ice-levels" placeholder="គ្មានទឹកកក, ទឹកកកតិច, ធម្មតា, ទឹកកកច្រើន" class="w-full p-2 border rounded-lg outline-none">
+                            <div class="flex items-center gap-2 mt-1"><span class="text-slate-600">លំនាំដើម</span><select id="set-ice-default" class="p-1.5 border rounded-lg outline-none"></select></div>
+                        </div>
+                    </div>
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <span class="font-semibold text-slate-600">Topping (ភ្ជាប់វត្ថុធាតុដើមដើម្បីកាត់ស្តុក)</span>
@@ -701,20 +689,11 @@
                     </div>
                     <div>
                         <label class="block font-bold text-slate-700 mb-1">២. កម្រិតស្ករ</label>
-                        <div class="grid grid-cols-4 gap-1.5 text-center">
-                            <button type="button" data-val="0%" onclick="selectOption('sugar', this)" class="opt-sugar p-1.5 border rounded-lg">0%</button>
-                            <button type="button" data-val="25%" onclick="selectOption('sugar', this)" class="opt-sugar p-1.5 border rounded-lg">25%</button>
-                            <button type="button" data-val="50%" onclick="selectOption('sugar', this)" class="opt-sugar p-1.5 border rounded-lg">50%</button>
-                            <button type="button" data-val="100%" onclick="selectOption('sugar', this)" class="opt-sugar p-1.5 border rounded-lg">100%</button>
-                        </div>
+                        <div id="opt-sugar-box" class="grid grid-cols-4 gap-1.5 text-center"></div>
                     </div>
                     <div>
                         <label class="block font-bold text-slate-700 mb-1">៣. កម្រិតទឹកកក</label>
-                        <div class="grid grid-cols-3 gap-1.5 text-center">
-                            <button type="button" data-val="No Ice" onclick="selectOption('ice', this)" class="opt-ice p-1.5 border rounded-lg">គ្មានទឹកកក</button>
-                            <button type="button" data-val="Less Ice" onclick="selectOption('ice', this)" class="opt-ice p-1.5 border rounded-lg">ទឹកកកតិច</button>
-                            <button type="button" data-val="Normal Ice" onclick="selectOption('ice', this)" class="opt-ice p-1.5 border rounded-lg">ធម្មតា</button>
-                        </div>
+                        <div id="opt-ice-box" class="grid grid-cols-3 gap-1.5 text-center"></div>
                     </div>
                     <div>
                         <label class="block font-bold text-slate-700 mb-1">៤. Topping</label>
@@ -743,7 +722,7 @@
             </div>
             <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 flex justify-end gap-2">
                 <button onclick="closeModal('modal-customization')" class="px-4 py-2 text-xs font-semibold bg-slate-200 rounded-lg">បោះបង់</button>
-                <button onclick="confirmAddToCart()" class="px-4 py-2 text-xs font-semibold bg-amber-800 hover:bg-amber-900 text-white rounded-lg">បញ្ចូលក្នុងកន្ត្រក</button>
+                <button id="custom-confirm-btn" onclick="confirmAddToCart()" class="px-4 py-2 text-xs font-semibold bg-amber-800 hover:bg-amber-900 text-white rounded-lg">បញ្ចូលក្នុងកន្ត្រក</button>
             </div>
         </div>
     </div>
@@ -818,6 +797,77 @@
             <div class="bg-slate-100 px-4 py-3 border-t border-slate-200 flex gap-2">
                 <button onclick="closeModal('modal-receipt')" class="flex-1 py-2 text-xs font-bold bg-slate-300 rounded-lg">បិទ</button>
                 <button onclick="printSection('print-receipt')" class="flex-1 py-2 text-xs font-bold bg-amber-800 text-white rounded-lg"><i class="fa-solid fa-print"></i> បោះពុម្ព</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: Checkout ================= -->
+    <div id="modal-checkout" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-3">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden flex flex-col max-h-[95vh]">
+            <div class="bg-emerald-800 text-white px-4 py-3 flex justify-between items-center">
+                <h3 class="font-bold text-sm"><i class="fa-solid fa-cash-register"></i> គិតលុយ — <span id="co-table">-</span></h3>
+                <button onclick="closeModal('modal-checkout')" class="text-white font-bold text-xl leading-none">&times;</button>
+            </div>
+            <div class="p-4 space-y-3 text-xs overflow-y-auto">
+                <div class="text-center bg-slate-50 border border-slate-200 rounded-xl py-3">
+                    <p class="text-slate-500 font-semibold">ត្រូវបង់</p>
+                    <p id="co-total-usd" class="text-4xl font-bold text-slate-800 leading-tight">$0.00</p>
+                    <p id="co-total-khr" class="text-lg font-bold text-emerald-700">0 ៛</p>
+                    <p id="co-breakdown" class="text-[11px] text-slate-500 mt-1"></p>
+                </div>
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="setPaymentMethod('cash')" id="pay-btn-cash" class="pay-method-btn border border-amber-800 bg-amber-800 text-white font-bold py-3 rounded-xl text-xs flex flex-col items-center gap-1"><i class="fa-solid fa-money-bill-wave text-lg"></i> សាច់ប្រាក់</button>
+                    <button onclick="setPaymentMethod('khqr')" id="pay-btn-khqr" class="pay-method-btn border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold py-3 rounded-xl text-xs flex flex-col items-center gap-1"><i class="fa-solid fa-qrcode text-lg text-red-600"></i> KHQR</button>
+                    <button onclick="setPaymentMethod('card')" id="pay-btn-card" class="pay-method-btn border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold py-3 rounded-xl text-xs flex flex-col items-center gap-1"><i class="fa-solid fa-credit-card text-lg text-blue-600"></i> កាត</button>
+                    <button onclick="setPaymentMethod('mixed')" id="pay-btn-mixed" class="pay-method-btn border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold py-3 rounded-xl text-xs flex flex-col items-center gap-1"><i class="fa-solid fa-layer-group text-lg text-violet-600"></i> ចម្រុះ</button>
+                </div>
+
+                <div id="cash-input-box" class="space-y-2">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[11px] text-slate-500 font-semibold mb-0.5">ទទួល ដុល្លារ ($)</label>
+                            <input type="number" id="cash-received-usd" oninput="calculateChange()" placeholder="0" step="0.5" min="0" inputmode="decimal" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-600 outline-none font-bold text-lg text-slate-800">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-500 font-semibold mb-0.5">ទទួល រៀល (៛)</label>
+                            <input type="number" id="cash-received-khr" oninput="calculateChange()" placeholder="0" step="100" min="0" inputmode="numeric" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-600 outline-none font-bold text-lg text-slate-800">
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button type="button" onclick="quickCash('exact')" class="px-3 py-1.5 bg-emerald-100 text-emerald-800 font-bold rounded-lg">គ្រប់ចំនួន</button>
+                        <button type="button" onclick="quickCash('usd',5)" class="px-3 py-1.5 bg-slate-100 font-bold rounded-lg">$5</button>
+                        <button type="button" onclick="quickCash('usd',10)" class="px-3 py-1.5 bg-slate-100 font-bold rounded-lg">$10</button>
+                        <button type="button" onclick="quickCash('usd',20)" class="px-3 py-1.5 bg-slate-100 font-bold rounded-lg">$20</button>
+                        <button type="button" onclick="quickCash('usd',50)" class="px-3 py-1.5 bg-slate-100 font-bold rounded-lg">$50</button>
+                        <button type="button" onclick="quickCash('khr',10000)" class="px-3 py-1.5 bg-slate-100 font-bold rounded-lg">10,000៛</button>
+                        <button type="button" onclick="quickCash('khr',20000)" class="px-3 py-1.5 bg-slate-100 font-bold rounded-lg">20,000៛</button>
+                        <button type="button" onclick="quickCash('khr',50000)" class="px-3 py-1.5 bg-slate-100 font-bold rounded-lg">50,000៛</button>
+                    </div>
+                    <div class="flex items-center justify-between bg-slate-50 border rounded-xl px-3 py-2.5">
+                        <span class="text-sm text-slate-600 font-bold">ប្រាក់អាប់:</span>
+                        <span id="cash-change-display" class="font-bold text-lg text-emerald-700">ទុកទទេ = បង់គ្រប់ចំនួន</span>
+                    </div>
+                </div>
+
+                <div id="co-khqr-box" class="hidden space-y-2 text-center">
+                    <div class="inline-block bg-slate-50 p-3 rounded-xl border border-slate-200"><div id="co-khqr-img" class="flex justify-center"></div></div>
+                    <div class="text-left"><label class="block font-bold text-slate-700 mb-1">លេខយោងប្រតិបត្តិការ (Ref) <span class="text-slate-400 font-normal">— ៤-៦ ខ្ទង់ចុងក្រោយ</span></label>
+                        <input id="co-khqr-ref" maxlength="20" placeholder="ឧ. 482913" class="w-full p-2 border rounded-lg outline-none"></div>
+                    <p class="text-[11px] text-rose-600 font-semibold">⚠️ ពិនិត្យសារជូនដំណឹងពីធនាគារ មុនចុចបញ្ជាក់</p>
+                </div>
+
+                <div id="co-card-box" class="hidden">
+                    <label class="block font-bold text-slate-700 mb-1">លេខយោងកាត (ស្រេចចិត្ត)</label>
+                    <input id="co-card-ref" maxlength="20" class="w-full p-2 border rounded-lg outline-none">
+                </div>
+
+                <div id="co-mixed-box" class="hidden text-center text-slate-600 bg-violet-50 border border-violet-200 rounded-xl p-3">
+                    បង់ច្រើនវិធីក្នុងវិក្កយបត្រតែមួយ (ឧ. សាច់ប្រាក់ + KHQR) ឬចែកស្មើគ្នា — ចុច <strong>បន្ត</strong>
+                </div>
+            </div>
+            <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 flex gap-2">
+                <button onclick="closeModal('modal-checkout')" class="flex-1 py-3 text-sm font-semibold bg-slate-200 hover:bg-slate-300 rounded-xl">បោះបង់</button>
+                <button id="co-confirm" onclick="confirmCheckout()" class="flex-[2] py-3 text-sm font-bold bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl shadow-md"><i class="fa-solid fa-check"></i> បញ្ជាក់ការទូទាត់</button>
             </div>
         </div>
     </div>
@@ -1098,6 +1148,8 @@
             defaultFloat: 50,
             largeExtra: 0.5,
             largeFactor: 1.3,
+            sugarLevels: ['0%', '25%', '50%', '100%'], defaultSugar: '50%',
+            iceLevels: ['No Ice', 'Less Ice', 'Normal Ice'], defaultIce: 'Normal Ice',
             autoTicket: false,
             archiveDays: 90,
             vat: { enabled: false, rate: 10, inclusive: true, tin: '', legalName: '' },
@@ -1700,6 +1752,7 @@
             document.getElementById('set-large-factor').value = settings.largeFactor;
             document.getElementById('topping-rows').innerHTML = '';
             settings.toppings.forEach(t => addToppingRow(t));
+            fillLevelSettings();
         }
         function saveShopSettings() {
             if (!need('settings')) return;
@@ -1756,6 +1809,12 @@
                 list.push({ id: parseInt(row.dataset.id) || uid() + nextId++, name, price: round2(price), rawId, qty: rawId ? qty : 0 });
             });
             if (bad) { showToast("តម្លៃ Topping មិនត្រឹមត្រូវ", "warning"); return; }
+            const sugar = parseLevels('set-sugar-levels'), ice = parseLevels('set-ice-levels');
+            if (sugar.length < 1 || ice.length < 1 || sugar.length > 8 || ice.length > 8) { showToast("កម្រិតស្ករ/ទឹកកក ត្រូវមាន ១ ដល់ ៨ ជម្រើស", "warning"); return; }
+            settings.sugarLevels = sugar; settings.iceLevels = ice;
+            const sd = document.getElementById('set-sugar-default').value, idf = document.getElementById('set-ice-default').value;
+            settings.defaultSugar = sugar.includes(sd) ? sd : sugar[Math.floor((sugar.length - 1) / 2)];
+            settings.defaultIce = ice.includes(idf) ? idf : ice[ice.length - 1];
             settings.largeExtra = round2(le);
             settings.largeFactor = lf;
             settings.toppings = list;
@@ -1763,7 +1822,8 @@
             pushConfig('settings');
             applyShopSettings();
             fillSettingsForm();
-            showToast("បានរក្សាទុក ទំហំកែវ & Topping!", "success");
+            audit('កែជម្រើសភេសជ្ជៈ', `ស្ករ: ${settings.sugarLevels.join('/')} (${settings.defaultSugar}) • ទឹកកក: ${settings.iceLevels.join('/')} (${settings.defaultIce})`);
+            showToast("បានរក្សាទុក ទំហំកែវ, ស្ករ, ទឹកកក & Topping!", "success");
         }
 
         // ==================== STAFF ====================
@@ -2058,28 +2118,97 @@
                 ['bg-amber-800', 'text-white', 'font-bold', 'border-amber-800'].forEach(c => b.classList.toggle(c, on));
             });
         }
-        function openCustomizationModal(itemId) {
-            const item = menuItems.find(i => i.id === itemId);
-            if (!item) return;
-            document.getElementById('custom-item-id').value = item.id;
-            document.getElementById('custom-modal-title').innerText = `កែសម្រួល៖ ${item.name}`;
-            document.getElementById('custom-note').value = '';
-            document.getElementById('custom-qty').innerText = '1';
-            const isBakery = !hasOptions(item);
-            document.getElementById('custom-drink-options').classList.toggle('hidden', isBakery);
-            document.getElementById('custom-bakery-note').classList.toggle('hidden', !isBakery);
-            selectedSugar = "50%"; selectedIce = "Normal Ice";
+        // ---- Sugar / ice options (configurable in Settings → Menu) ----
+        const ICE_KH = { 'No Ice': 'គ្មានទឹកកក', 'Less Ice': 'ទឹកកកតិច', 'Normal Ice': 'ធម្មតា', 'Extra Ice': 'ទឹកកកច្រើន' };
+        function iceLabel(v) { return ICE_KH[v] || v; }
+        function sugarLevels() { return (settings.sugarLevels && settings.sugarLevels.length) ? settings.sugarLevels : ['0%', '25%', '50%', '100%']; }
+        function iceLevels() { return (settings.iceLevels && settings.iceLevels.length) ? settings.iceLevels : ['No Ice', 'Less Ice', 'Normal Ice']; }
+        function parseLevels(id) {
+            const out = [];
+            document.getElementById(id).value.split(/[,،、]/).map(x => x.trim()).filter(Boolean).forEach(x => {
+                // Khmer labels typed for the built-in ice levels are stored as their usual values
+                const v = Object.keys(ICE_KH).find(k => ICE_KH[k] === x) || x;
+                if (!out.includes(v)) out.push(v.slice(0, 20));
+            });
+            return out;
+        }
+        function fillLevelSettings() {
+            const sl = sugarLevels(), il = iceLevels();
+            document.getElementById('set-sugar-levels').value = sl.join(', ');
+            document.getElementById('set-ice-levels').value = il.map(iceLabel).join(', ');
+            const opts = (list, cur, lab) => list.map(v => `<option value="${esc(v)}" ${v === cur ? 'selected' : ''}>${esc(lab(v))}</option>`).join('');
+            document.getElementById('set-sugar-default').innerHTML = opts(sl, settings.defaultSugar, x => x);
+            document.getElementById('set-ice-default').innerHTML = opts(il, settings.defaultIce, iceLabel);
+            const sync = (inp, sel, lab) => { document.getElementById(inp).oninput = () => { const l = parseLevels(inp); const cur = document.getElementById(sel).value; document.getElementById(sel).innerHTML = opts(l, cur, lab); }; };
+            sync('set-sugar-levels', 'set-sugar-default', x => x);
+            sync('set-ice-levels', 'set-ice-default', iceLabel);
+        }
+        function renderLevelButtons() {
+            const sl = sugarLevels(), il = iceLevels();
+            // Keep a level from an older order selectable even if it was removed from the list since
+            if (selectedSugar && selectedSugar !== '-' && !sl.includes(selectedSugar)) sl.push(selectedSugar);
+            if (selectedIce && selectedIce !== '-' && !il.includes(selectedIce)) il.push(selectedIce);
+            const sb = document.getElementById('opt-sugar-box'), ib = document.getElementById('opt-ice-box');
+            sb.className = `grid gap-1.5 text-center grid-cols-${Math.min(4, sl.length)}`;
+            ib.className = `grid gap-1.5 text-center grid-cols-${Math.min(4, il.length)}`;
+            sb.innerHTML = sl.map(v => `<button type="button" data-val="${esc(v)}" onclick="selectOption('sugar', this)" class="opt-sugar p-1.5 border rounded-lg">${esc(v)}</button>`).join('');
+            ib.innerHTML = il.map(v => `<button type="button" data-val="${esc(v)}" onclick="selectOption('ice', this)" class="opt-ice p-1.5 border rounded-lg">${esc(iceLabel(v))}</button>`).join('');
             highlightOption('opt-sugar', selectedSugar);
             highlightOption('opt-ice', selectedIce);
-            document.querySelector('input[name="custom-size"][value="Regular"]').checked = true;
+        }
+        let editingCartId = null;
+        // cartId given → edit that line in the current order; otherwise add a new line
+        function openCustomizationModal(itemId, cartId) {
+            const item = menuItems.find(i => i.id === itemId);
+            const line = cartId ? tablesState[activeTableId].cart.find(c => c.cartUniqueId === cartId) : null;
+            if (!item && !line) return;
+            editingCartId = line ? line.cartUniqueId : null;
+            const name = item ? item.name : line.name;
+            document.getElementById('custom-item-id').value = item ? item.id : line.itemId;
+            document.getElementById('custom-modal-title').innerText = line ? `កែប្រែ៖ ${name}${line.sent ? ' (បានបញ្ជូនរួច)' : ''}` : `កែសម្រួល៖ ${name}`;
+            document.getElementById('custom-confirm-btn').innerText = line ? 'រក្សាទុកការកែ' : 'បញ្ចូលក្នុងកន្ត្រក';
+            document.getElementById('custom-note').value = line ? (line.note || '') : '';
+            document.getElementById('custom-qty').innerText = line ? String(line.qty) : '1';
+            const isBakery = item ? !hasOptions(item) : line.size === '-';
+            document.getElementById('custom-drink-options').classList.toggle('hidden', isBakery);
+            document.getElementById('custom-bakery-note').classList.toggle('hidden', !isBakery);
+            selectedSugar = line && line.sugar !== '-' ? line.sugar : (settings.defaultSugar || '50%');
+            selectedIce = line && line.ice !== '-' ? line.ice : (settings.defaultIce || 'Normal Ice');
+            renderLevelButtons();
+            document.querySelector(`input[name="custom-size"][value="${line && line.size === 'Large' ? 'Large' : 'Regular'}"]`).checked = true;
+            const chosen = new Set(line ? (line.toppings || []).map(t => typeof t === 'object' ? t.id : null) : []);
             document.getElementById('custom-topping-list').innerHTML = settings.toppings.length
                 ? settings.toppings.map(t => `
                     <label class="border p-2 rounded-lg flex items-center justify-between cursor-pointer hover:bg-slate-50">
                         <span>${esc(t.name)} (+${fmtUSD(t.price)})</span>
-                        <input type="checkbox" class="opt-topping accent-amber-800" value="${t.id}">
+                        <input type="checkbox" class="opt-topping accent-amber-800" value="${t.id}" ${chosen.has(t.id) ? 'checked' : ''}>
                     </label>`).join('')
                 : '<p class="text-slate-400">គ្មាន Topping</p>';
             openModal('modal-customization');
+        }
+        function editCartItem(cartId) {
+            const line = tablesState[activeTableId].cart.find(c => c.cartUniqueId === cartId);
+            if (line) openCustomizationModal(line.itemId, cartId);
+        }
+        function lineSummary(c) {
+            return `${c.qty} × ${c.name}${c.size !== '-' ? ` (${c.size})` : ''}${c.size !== '-' ? ` • ស្ករ ${c.sugar} • ${iceLabel(c.ice)}` : ''}${c.toppings && c.toppings.length ? ' • +' + c.toppings.map(toppingName).join(', ') : ''}${c.note ? ' • ' + c.note : ''}`;
+        }
+        // Barista ticket for a changed item that was already sent
+        function printModifyTicket(tbl, before, after) {
+            const big = orderTypeOf(tbl) === 'takeaway' && tbl.queueNo ? `#${tbl.queueNo}` : esc(tbl.name);
+            const row = (c, label) => `<div class="py-1 border-b border-dotted border-slate-400"><div class="text-[10px]">${label}</div>
+                <div class="font-bold">${c.qty} × ${esc(c.name)}${c.size !== '-' ? ` (${esc(c.size)})` : ''}</div>
+                ${c.size !== '-' ? `<div>ស្ករ ${esc(c.sugar)} • ${esc(iceLabel(c.ice))}</div>` : ''}
+                ${c.toppings && c.toppings.length ? `<div>+ ${esc(c.toppings.map(toppingName).join(', '))}</div>` : ''}
+                ${c.note ? `<div class="font-bold">» ${esc(c.note)}</div>` : ''}</div>`;
+            document.getElementById('printable-ticket').innerHTML = `
+                <div class="text-center border-b border-dashed border-slate-500 pb-1 mb-1">
+                    <div class="font-bold text-sm">⚠️ កែប្រែ / CHANGED</div>
+                    <div class="font-bold text-2xl font-sans">${big}</div>
+                    <div class="text-[10px]">${new Date().toLocaleTimeString('en-GB')} • ${esc(currentUser ? currentUser.name : '')}</div>
+                </div>
+                <div style="text-decoration: line-through">${row(before, 'ចាស់ (បោះបង់)')}</div>${row(after, 'ថ្មី (ធ្វើតាមនេះ)')}`;
+            printSection('print-ticket');
         }
         function selectOption(type, btnEl) {
             const val = btnEl.dataset.val;
@@ -2094,10 +2223,13 @@
             const el = document.getElementById('custom-qty');
             el.innerText = Math.max(1, Math.min(50, (parseInt(el.innerText) || 1) + d));
         }
-        function confirmAddToCart() {
-            const item = menuItems.find(i => i.id === parseInt(document.getElementById('custom-item-id').value));
+        async function confirmAddToCart() {
+            const itemId = parseInt(document.getElementById('custom-item-id').value);
+            const tblE = tablesState[activeTableId];
+            const editLine = editingCartId ? tblE.cart.find(c => c.cartUniqueId === editingCartId) : null;
+            const item = menuItems.find(i => i.id === itemId) || (editLine ? { id: editLine.itemId, name: editLine.name, price: editLine.basePrice ?? editLine.unitPrice, noOptions: editLine.size === '-' } : null);
             if (!item) return;
-            const isBakery = !hasOptions(item);
+            const isBakery = editLine ? editLine.size === '-' : !hasOptions(item);
             const note = document.getElementById('custom-note').value.trim().slice(0, 80);
             const qty = Math.max(1, parseInt(document.getElementById('custom-qty').innerText) || 1);
             let size = '-', extra = 0, toppings = [];
@@ -2110,9 +2242,34 @@
                 });
             }
             const tbl = tablesState[activeTableId];
+            if (editLine) {
+                // Price base stays what it was when ordered (menu price changes don't touch open orders)
+                const base = editLine.basePrice ?? round2(editLine.unitPrice - (editLine.size === 'Large' ? settings.largeExtra : 0) - (editLine.toppings || []).reduce((t, x) => t + (x.price || 0), 0));
+                const after = Object.assign({}, editLine, { size, sugar: isBakery ? '-' : selectedSugar, ice: isBakery ? '-' : selectedIce, toppings, note, qty, unitPrice: round2(base + extra), basePrice: base });
+                const before = JSON.parse(JSON.stringify(editLine));
+                const changed = ['size', 'sugar', 'ice', 'note', 'qty', 'unitPrice'].some(k => before[k] !== after[k]) || JSON.stringify((before.toppings || []).map(toppingName)) !== JSON.stringify(toppings.map(toppingName));
+                if (!changed) { closeModal('modal-customization'); editingCartId = null; return; }
+                if (editLine.sent && qty < editLine.qty) {
+                    const ok = await askManager({ title: `Void៖ ${editLine.qty - qty} × ${editLine.name}`, needReason: true, perm: 'void' });
+                    if (!ok) return;
+                    logVoid('item', { table: tbl.name, itemName: editLine.name, qty: editLine.qty - qty, amount: round2(editLine.unitPrice * (editLine.qty - qty)) }, ok);
+                }
+                Object.assign(editLine, after);
+                if (before.sent) {
+                    editLine.modified = true;
+                    audit('កែមុខដែលបានបញ្ជូន', `${tbl.name}: ${lineSummary(before)} → ${lineSummary(after)}`);
+                    printModifyTicket(tbl, before, editLine);
+                }
+                editingCartId = null;
+                saveTablesState();
+                closeModal('modal-customization');
+                renderCart();
+                showToast(before.sent ? "បានកែ និងបោះពុម្ព Ticket កែប្រែ" : "បានកែប្រែ", "success");
+                return;
+            }
             tbl.cart.push({
                 cartUniqueId: Date.now() + Math.floor(Math.random() * 1000),
-                itemId: item.id, name: item.name, unitPrice: round2(item.price + extra), qty,
+                itemId: item.id, name: item.name, unitPrice: round2(item.price + extra), basePrice: round2(item.price), qty,
                 size, sugar: isBakery ? '-' : selectedSugar, ice: isBakery ? '-' : selectedIce, toppings, note, sent: false
             });
             tbl.status = "occupied";
@@ -2132,12 +2289,14 @@
                 const row = document.createElement('div');
                 row.className = `border rounded-lg p-2 text-xs space-y-1 ${ci.sent ? 'bg-slate-50 border-slate-200' : 'bg-amber-50 border-amber-300'}`;
                 row.innerHTML = `
+                    <div onclick="editCartItem(${ci.cartUniqueId})" class="cursor-pointer space-y-1" title="ចុចដើម្បីកែ">
                     <div class="flex justify-between items-start font-bold text-slate-800 gap-2">
-                        <span>${esc(ci.name)}${isBakery ? '' : ` (${esc(ci.size)})`}</span>
+                        <span>${esc(ci.name)}${isBakery ? '' : ` (${esc(ci.size)})`} <i class="fa-solid fa-pen text-[9px] text-slate-400"></i>${ci.modified ? ' <span class="text-[9px] bg-amber-200 text-amber-900 px-1 rounded">កែប្រែ</span>' : ''}</span>
                         <span class="text-amber-800 whitespace-nowrap">${fmtUSD(ci.unitPrice * ci.qty)}</span>
                     </div>
-                    ${isBakery ? '' : `<div class="text-[10px] text-slate-500 space-x-2"><span>ស្ករ: ${esc(ci.sugar)}</span><span>ទឹកកក: ${esc(ci.ice)}</span>${ci.toppings.length ? `<span class="text-amber-700">+${esc(ci.toppings.map(toppingName).join(', '))}</span>` : ''}</div>`}
+                    ${isBakery ? '' : `<div class="text-[10px] text-slate-500 space-x-2"><span>ស្ករ: ${esc(ci.sugar)}</span><span>ទឹកកក: ${esc(iceLabel(ci.ice))}</span>${ci.toppings.length ? `<span class="text-amber-700">+${esc(ci.toppings.map(toppingName).join(', '))}</span>` : ''}</div>`}
                     ${ci.note ? `<div class="text-[10px] text-sky-700 font-semibold"><i class="fa-solid fa-note-sticky"></i> ${esc(ci.note)}</div>` : ''}
+                    </div>
                     <div class="flex justify-between items-center pt-1 border-t border-slate-200">
                         <div class="flex items-center gap-1.5">
                             <button onclick="changeCartQty(${ci.cartUniqueId}, -1)" class="w-6 h-6 bg-slate-200 hover:bg-slate-300 rounded font-bold">-</button>
@@ -2145,7 +2304,8 @@
                             <button onclick="changeCartQty(${ci.cartUniqueId}, 1)" class="w-6 h-6 bg-slate-200 hover:bg-slate-300 rounded font-bold">+</button>
                             <span class="text-[10px] ${ci.sent ? 'text-slate-400' : 'text-amber-700 font-bold'}">${ci.sent ? '<i class="fa-solid fa-lock"></i> បានបញ្ជូន' : 'ថ្មី'}</span>
                         </div>
-                        <button onclick="removeCartItem(${ci.cartUniqueId})" class="text-[10px] text-rose-500 hover:text-rose-700 font-semibold">លុប</button>
+                        <span class="flex gap-3"><button onclick="editCartItem(${ci.cartUniqueId})" class="text-[10px] text-amber-800 font-semibold"><i class="fa-solid fa-pen"></i> កែ</button>
+                        <button onclick="removeCartItem(${ci.cartUniqueId})" class="text-[10px] text-rose-500 hover:text-rose-700 font-semibold">លុប</button></span>
                     </div>`;
                 container.appendChild(row);
             });
@@ -2269,6 +2429,52 @@
             btn.classList.add('bg-amber-800', 'text-white', 'border-amber-800');
             btn.classList.remove('bg-white', 'text-slate-700', 'border-slate-300');
             document.getElementById('cash-input-box').classList.toggle('hidden', method !== 'cash');
+            document.getElementById('co-khqr-box').classList.toggle('hidden', method !== 'khqr');
+            document.getElementById('co-card-box').classList.toggle('hidden', method !== 'card');
+            document.getElementById('co-mixed-box').classList.toggle('hidden', method !== 'mixed');
+            document.getElementById('co-confirm').innerHTML = method === 'mixed' ? 'បន្ត <i class="fa-solid fa-arrow-right"></i>' : '<i class="fa-solid fa-check"></i> បញ្ជាក់ការទូទាត់';
+            if (method === 'khqr') {
+                const img = getKhqr();
+                document.getElementById('co-khqr-img').innerHTML = img ? `<img src="${safeImg(img)}" alt="KHQR" class="w-44 h-auto rounded">`
+                    : '<p class="w-44 py-4 text-slate-500">មិនទាន់មានរូប KHQR<br>(ការកំណត់ → KHQR)</p>';
+                setTimeout(() => document.getElementById('co-khqr-ref').focus(), 50);
+            }
+            if (method === 'cash' && isOpen('modal-checkout')) setTimeout(() => document.getElementById('cash-received-usd').focus(), 50);
+        }
+        // Checkout pop-up: opens when the cashier taps "គិតលុយ"
+        function openCheckoutModal() {
+            const tbl = tablesState[activeTableId];
+            const t = getTableTotals(tbl);
+            document.getElementById('co-table').innerText = tbl.name;
+            document.getElementById('co-total-usd').innerText = fmtUSD(t.totalUSD);
+            document.getElementById('co-total-khr').innerText = fmtKHR(t.totalUSD);
+            document.getElementById('co-breakdown').innerText = [`សរុបរង ${fmtUSD(t.subtotal)}`, t.discountAmount ? `បញ្ចុះ -${fmtUSD(t.discountAmount)}` : '',
+                t.redeemUSD ? `ពិន្ទុ -${fmtUSD(t.redeemUSD)}` : '', vatOn() ? `VAT ${fmtUSD(t.vatUSD)}${settings.vat.inclusive ? ' (រួម)' : ''}` : ''].filter(Boolean).join(' • ');
+            ['cash-received-usd', 'cash-received-khr', 'co-khqr-ref', 'co-card-ref'].forEach(id => { document.getElementById(id).value = ''; });
+            openModal('modal-checkout');
+            setPaymentMethod('cash');
+            calculateChange();
+        }
+        function quickCash(kind, amount) {
+            const u = document.getElementById('cash-received-usd'), k = document.getElementById('cash-received-khr');
+            if (kind === 'exact') { u.value = ''; k.value = ''; }
+            else if (kind === 'usd') { u.value = amount; k.value = ''; }
+            else { k.value = amount; u.value = ''; }
+            calculateChange();
+        }
+        function confirmCheckout() {
+            const tbl = tablesState[activeTableId];
+            if (!tbl.cart.length) { closeModal('modal-checkout'); return; }
+            const { totalUSD } = getTableTotals(tbl);
+            const m = selectedPaymentMethod;
+            if (m === 'cash') {
+                const paid = getCashPaid();
+                if (paid && paid.totalUSD - totalUSD <= -0.01) { showToast("ប្រាក់ទទួលមិនគ្រប់ចំនួនទេ!", "warning"); return; }
+            }
+            closeModal('modal-checkout');
+            if (m === 'mixed') { openMixedModal(totalUSD); return; }
+            const ref = m === 'khqr' ? document.getElementById('co-khqr-ref').value.trim() : m === 'card' ? document.getElementById('co-card-ref').value.trim() : '';
+            executeFinalPayment(m, ref);
         }
         function getCashPaid() {
             const u = document.getElementById('cash-received-usd').value;
@@ -2319,7 +2525,7 @@
                 </div>
                 ${items.map(i => `<div class="py-1 border-b border-dotted border-slate-400">
                     <div class="font-bold">${i.qty} × ${esc(i.name)}${i.size !== '-' ? ` (${esc(i.size)})` : ''}</div>
-                    ${i.size !== '-' ? `<div>ស្ករ ${esc(i.sugar)} • ${esc(i.ice)}</div>` : ''}
+                    ${i.size !== '-' ? `<div>ស្ករ ${esc(i.sugar)} • ${esc(iceLabel(i.ice))}</div>` : ''}
                     ${i.toppings && i.toppings.length ? `<div>+ ${esc(i.toppings.map(toppingName).join(', '))}</div>` : ''}
                     ${i.note ? `<div class="font-bold">» ${esc(i.note)}</div>` : ''}</div>`).join('')}`;
             printSection('print-ticket');
@@ -2327,14 +2533,7 @@
         function processTableCheckout() {
             const tbl = tablesState[activeTableId];
             if (!tbl.cart.length) { showToast("គ្មានទំនិញក្នុងតុនេះដើម្បីគិតលុយទេ!", "warning"); return; }
-            const { totalUSD } = getTableTotals(tbl);
-            if (selectedPaymentMethod === 'cash') {
-                const paid = getCashPaid();
-                if (paid && paid.totalUSD - totalUSD <= -0.01) { showToast("ប្រាក់ទទួលមិនគ្រប់ចំនួនទេ!", "warning"); return; }
-            }
-            if (selectedPaymentMethod === 'khqr') { openKhqrModal(totalUSD); return; }
-            if (selectedPaymentMethod === 'mixed') { openMixedModal(totalUSD); return; }
-            executeFinalPayment(selectedPaymentMethod, '');
+            openCheckoutModal();
         }
         function openKhqrModal(amountUSD) {
             document.getElementById('khqr-amount-usd').innerText = fmtUSD(amountUSD);
@@ -2471,7 +2670,7 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="py-1"><div>${esc(i.name)}${isBakery ? '' : ` (${esc(i.size)})`}</div>
-                        ${isBakery ? '' : `<div class="text-[9px] text-slate-500">${esc(i.sugar)}, ${esc(i.ice)}${i.toppings.length ? ', +' + esc(i.toppings.map(toppingName).join(', ')) : ''}</div>`}
+                        ${isBakery ? '' : `<div class="text-[9px] text-slate-500">${esc(i.sugar)}, ${esc(iceLabel(i.ice))}${i.toppings.length ? ', +' + esc(i.toppings.map(toppingName).join(', ')) : ''}</div>`}
                         ${i.note ? `<div class="text-[9px] text-slate-500">» ${esc(i.note)}</div>` : ''}</td>
                     <td class="text-center">${i.qty}</td>
                     <td class="text-right">${fmtUSD(i.unitPrice * i.qty)}</td>`;
@@ -3602,8 +3801,10 @@
                 if (e.key === 'Escape') resolveApprove(false);
                 return;
             }
+            if (e.key === 'Enter' && isOpen('modal-checkout')) { e.preventDefault(); confirmCheckout(); return; }
             if (e.key === 'Enter' && isOpen('modal-customization') && document.activeElement.tagName !== 'BUTTON') { confirmAddToCart(); return; }
-            if (e.key === 'Escape') ['modal-mixed', 'modal-split', 'modal-customer', 'modal-purchase', 'modal-count', 'modal-customization', 'modal-khqr', 'modal-receipt', 'modal-table-transfer', 'modal-ingredient', 'modal-menu', 'modal-staff'].forEach(closeModal);
+            if (e.key === 'Escape') editingCartId = null;
+            if (e.key === 'Escape') ['modal-checkout', 'modal-mixed', 'modal-split', 'modal-customer', 'modal-purchase', 'modal-count', 'modal-customization', 'modal-khqr', 'modal-receipt', 'modal-table-transfer', 'modal-ingredient', 'modal-menu', 'modal-staff'].forEach(closeModal);
         });
 
         // ==================== EXTRA SETTINGS (VAT / loyalty / Telegram / auto-lock) ====================
