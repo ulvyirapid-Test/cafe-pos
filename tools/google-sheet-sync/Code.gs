@@ -1,5 +1,5 @@
 /**
- * ☕ Cafee Ankor POS — Cloud Sync for Google Sheets (v1)
+ * ☕ Cafee Ankor POS — Cloud Sync for Google Sheets (v2 — with owner dashboard)
  *
  * The POS sends sales, voids, shifts, stock changes, menu, staff and settings here.
  * Every POS device that uses the same Web App URL + API Key shares the same data.
@@ -40,9 +40,19 @@ function doGet() {
 function doPost(e) {
   let body;
   try { body = JSON.parse(e.postData.contents); } catch (err) { return out({ ok: false, error: 'bad_json' }); }
-  const key = PropertiesService.getScriptProperties().getProperty('API_KEY');
+  const props = PropertiesService.getScriptProperties();
+  const key = props.getProperty('API_KEY');
   if (!key) return out({ ok: false, error: 'not_setup' });
-  if (!body || body.key !== key) return out({ ok: false, error: 'bad_key' });
+  if (!body) return out({ ok: false, error: 'bad_key' });
+  // Owner dashboard: read-only. Accepts the VIEW key (safe to keep on a phone) or the full API key.
+  if (body.action === 'dashboard') {
+    const view = props.getProperty('VIEW_KEY');
+    if (body.key !== key && !(view && body.key === view)) return out({ ok: false, error: 'bad_key' });
+    try { return out(Object.assign({ ok: true }, dashboard(Number(body.days) || 30))); }
+    catch (err) { return out({ ok: false, error: String(err && err.message || err).slice(0, 200) }); }
+  }
+  if (body.key !== key) return out({ ok: false, error: 'bad_key' });
+  if (body.action === 'viewKey') return out({ ok: true, viewKey: viewKey(body.reset === true) });
   const device = String(body.device || '?').slice(0, 3);
 
   const lock = LockService.getScriptLock();
@@ -237,6 +247,118 @@ function serverState(since) {
     inventory: inv.order.map(k => inv.map[k]),
     configKeys: config.map(c => c.key),
     config: config.filter(c => c.updated > since)
+  };
+}
+
+// ============================ OWNER DASHBOARD (read-only) ============================
+// The view key can only read this summary — it cannot send sales or change anything.
+function viewKey(reset) {
+  const props = PropertiesService.getScriptProperties();
+  let k = props.getProperty('VIEW_KEY');
+  if (!k || reset) { k = 'v' + makeKey().slice(0, 31); props.setProperty('VIEW_KEY', k); }
+  return k;
+}
+function sheetObjects(name) {
+  const sh = SpreadsheetApp.getActive().getSheetByName(name);
+  if (!sh || sh.getLastRow() < 2) return [];
+  const vals = sh.getRange(1, 1, sh.getLastRow(), sh.getLastColumn()).getValues();
+  const head = vals[0].map(String);
+  return vals.slice(1).filter(r => r[0] !== '').map(r => { const o = {}; head.forEach((h, i) => o[h] = r[i]); return o; });
+}
+// Sheets turns '2026-11-04' / '08:15:00' text into Date cells; bring them back to text
+function cellDate(v, fmt) {
+  if (v instanceof Date) return Utilities.formatDate(v, SpreadsheetApp.getActive().getSpreadsheetTimeZone(), fmt);
+  return String(v || '');
+}
+function isTrue(v) { return v === true || String(v).toUpperCase() === 'TRUE'; }
+function dashboard(days) {
+  days = Math.min(Math.max(days, 7), 120);
+  const now = new Date();
+  const dayStr = d => Utilities.formatDate(d, TZ, 'yyyy-MM-dd');
+  const today = dayStr(now);
+  const dates = [];
+  for (let i = days - 1; i >= 0; i--) dates.push(dayStr(new Date(now.getTime() - i * 86400000)));
+  const first = dates[0];
+  const weekAgo = dayStr(new Date(now.getTime() - 7 * 86400000));
+  const yesterday = dayStr(new Date(now.getTime() - 86400000));
+  const monthStart = today.slice(0, 8) + '01';
+  const lastMonth = new Date(now.getTime()); lastMonth.setDate(1); lastMonth.setDate(0);           // last day of previous month
+  const prevMonthStart = dayStr(lastMonth).slice(0, 8) + '01';
+  const prevMonthSameDay = dayStr(lastMonth).slice(0, 8) + String(Math.min(Number(today.slice(8)), lastMonth.getDate())).padStart(2, '0');
+
+  const blank = () => ({ revenue: 0, bills: 0, profit: 0, cogs: 0, discount: 0, vat: 0 });
+  const byDay = {}; dates.forEach(d => byDay[d] = blank());
+  const month = blank(), prevMonth = blank();
+  const hours = new Array(24).fill(0), hoursPrev = new Array(24).fill(0);
+  const methods = {}, cashiers = {}, orderTypes = {};
+  let voidedToday = 0, voidedTodayAmt = 0, lastSaleAt = '';
+  const add = (o, s) => { o.revenue += s.total; o.bills++; o.profit += s.profit; o.cogs += s.cogs; o.discount += s.discount; o.vat += s.vat; };
+
+  sheetObjects('Sales').forEach(r => {
+    const date = cellDate(r.date, 'yyyy-MM-dd'), time = cellDate(r.time, 'HH:mm:ss');
+    if (!date) return;
+    const s = { total: num(r.total), profit: num(r.profit), cogs: num(r.cogs), discount: num(r.discount), vat: num(r.vat) };
+    if (isTrue(r.voided)) { if (date === today) { voidedToday++; voidedTodayAmt += s.total; } return; }
+    if (byDay[date]) add(byDay[date], s);
+    if (date >= monthStart && date <= today) add(month, s);
+    if (date >= prevMonthStart && date <= prevMonthSameDay) add(prevMonth, s);
+    const h = Number(time.slice(0, 2));
+    if (date === today) {
+      if (h >= 0 && h < 24) hours[h] += s.total;
+      const m = String(r.paymentMethod || 'other'); methods[m] = (methods[m] || 0) + s.total;
+      const c = String(r.cashier || '-'); cashiers[c] = (cashiers[c] || 0) + s.total;
+      const t = String(r.orderType || '-'); orderTypes[t] = (orderTypes[t] || 0) + 1;
+      if (date + ' ' + time > lastSaleAt) lastSaleAt = date + ' ' + time;
+    } else if (date === weekAgo && h >= 0 && h < 24) hoursPrev[h] += s.total;
+  });
+
+  const items = {}, itemsToday = {};
+  sheetObjects('SaleItems').forEach(r => {
+    if (isTrue(r.voided)) return;
+    const date = cellDate(r.date, 'yyyy-MM-dd');
+    if (date < dayStr(new Date(now.getTime() - 6 * 86400000))) return;
+    const name = String(r.item || '-');
+    const o = items[name] = items[name] || { name: name, qty: 0, revenue: 0 };
+    o.qty += num(r.qty); o.revenue += num(r.lineTotal);
+    if (date === today) { const t = itemsToday[name] = itemsToday[name] || { name: name, qty: 0, revenue: 0 }; t.qty += num(r.qty); t.revenue += num(r.lineTotal); }
+  });
+  const top = o => Object.keys(o).map(k => o[k]).sort((a, b) => b.qty - a.qty).slice(0, 10).map(x => ({ name: x.name, qty: round(x.qty), revenue: round(x.revenue) }));
+
+  const inventory = sheetObjects('Inventory').map(r => ({ name: String(r.name), unit: String(r.unit), stock: num(r.stock), alert: num(r.alertThreshold) }));
+  const lowStock = inventory.filter(r => r.stock <= r.alert).sort((a, b) => a.stock / (a.alert || 1) - b.stock / (b.alert || 1));
+
+  const voids = sheetObjects('Voids').map(r => ({ date: cellDate(r.date, 'yyyy-MM-dd'), time: cellDate(r.time, 'HH:mm'), type: String(r.type),
+    invId: String(r.invId || ''), table: String(r.table || ''), item: String(r.item || ''), qty: num(r.qty), amount: num(r.amount),
+    by: String(r.by || ''), approvedBy: String(r.approvedBy || ''), reason: String(r.reason || '') }))
+    .filter(v => v.date >= weekAgo).reverse().slice(0, 20);
+
+  const shifts = sheetObjects('Shifts').slice(-7).reverse().map(r => ({ start: String(r.start), end: String(r.end), closedBy: String(r.closedBy),
+    approvedBy: String(r.approvedBy), bills: num(r.bills), net: num(r.net), cash: num(r.cash), khqr: num(r.khqr), card: num(r.card),
+    expected: num(r.expected), counted: num(r.counted), variance: num(r.variance), device: String(r.device || '') }));
+
+  const devices = {};
+  const proc = SpreadsheetApp.getActive().getSheetByName('Processed');
+  if (proc && proc.getLastRow() > 1) {
+    const from = Math.max(2, proc.getLastRow() - 1500);
+    proc.getRange(from, 3, proc.getLastRow() - from + 1, 2).getValues().forEach(r => {
+      if (!r[0]) return;
+      const t = r[1] instanceof Date ? r[1].toISOString() : String(r[1]);
+      if (!devices[r[0]] || t > devices[r[0]]) devices[r[0]] = t;
+    });
+  }
+  const roundDay = o => { Object.keys(o).forEach(k => o[k] = round(o[k])); return o; };
+  const cfg = readConfig().find(c => c.key === 'settings');
+  const shop = cfg && cfg.value || {};
+  return {
+    shopName: String(shop.shopName || 'Café'), rate: num(shop.rate) || 4100,
+    generatedAt: now.toISOString(), tz: TZ, today: today, yesterday: yesterday, weekAgo: weekAgo,
+    days: dates.map(d => Object.assign({ date: d }, roundDay(byDay[d]))),
+    month: roundDay(month), prevMonth: roundDay(prevMonth),
+    hours: hours.map(round), hoursPrev: hoursPrev.map(round),
+    methods: roundDay(methods), cashiers: roundDay(cashiers), orderTypes: orderTypes,
+    voidedToday: voidedToday, voidedTodayAmt: round(voidedTodayAmt), lastSaleAt: lastSaleAt,
+    topItems: top(items), topToday: top(itemsToday),
+    lowStock: lowStock, inventoryCount: inventory.length, voids: voids, shifts: shifts, devices: devices
   };
 }
 

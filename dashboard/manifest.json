@@ -1,0 +1,10 @@
+{
+  "name": "Owner Dashboard — Café POS",
+  "short_name": "Dashboard",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f3ee",
+  "theme_color": "#451a03",
+  "icons": [{ "src": "../icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://script.google.com https://script.googleusercontent.com; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#451a03">
+<title>Owner Dashboard</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="../icon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f6f3ee; --surface: #fcfcfb; --raised: #ffffff; --line: #e7e2da; --grid: #eeeae4;
+  --ink: #1f1a17; --ink-2: #5b524b; --ink-3: #8a8079;
+  --brand: #451a03; --brand-2: #78350f;
+  --s1: #b45309; --s2: #0b7fa3;
+  --good: #047857; --good-bg: #ecfdf5; --bad: #b91c1c; --bad-bg: #fef2f2; --warn: #a16207; --warn-bg: #fefce8;
+  --shadow: 0 1px 2px rgba(40,25,10,.06), 0 4px 14px rgba(40,25,10,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12100e; --surface: #1a1a19; --raised: #211f1d; --line: #34302c; --grid: #2a2725;
+    --ink: #f3efea; --ink-2: #c4bbb2; --ink-3: #8f867e;
+    --brand: #2a1204; --brand-2: #5a2a0c;
+    --s1: #d97706; --s2: #0d9aa5;
+    --good: #34d399; --good-bg: #0f2a20; --bad: #f87171; --bad-bg: #2d1414; --warn: #facc15; --warn-bg: #2a2410;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12100e; --surface: #1a1a19; --raised: #211f1d; --line: #34302c; --grid: #2a2725;
+  --ink: #f3efea; --ink-2: #c4bbb2; --ink-3: #8f867e;
+  --brand: #2a1204; --brand-2: #5a2a0c;
+  --s1: #d97706; --s2: #0d9aa5;
+  --good: #34d399; --good-bg: #0f2a20; --bad: #f87171; --bad-bg: #2d1414; --warn: #facc15; --warn-bg: #2a2410;
+  --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: 'Kantumruy Pro', system-ui, sans-serif; font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+.num { font-variant-numeric: tabular-nums; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
+header { background: var(--brand); color: #fff7ed; padding: calc(14px + env(safe-area-inset-top)) 16px 14px; position: sticky; top: 0; z-index: 5; }
+.hrow { max-width: 980px; margin: 0 auto; display: flex; align-items: center; gap: 10px; }
+.hrow h1 { font-size: 16px; margin: 0; font-weight: 700; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hrow small { display: block; font-size: 11px; font-weight: 400; color: #fcd9b0; }
+.icon-btn { display: inline-grid; place-items: center; background: rgba(255,255,255,.12); border: 0; color: #fff7ed; width: 36px; height: 36px; border-radius: 10px; font-size: 16px; cursor: pointer; flex: none; }
+.icon-btn:active { transform: scale(.96); }
+main { max-width: 980px; margin: 0 auto; padding: 14px 16px 40px; display: grid; gap: 14px; }
+.card { background: var(--raised); border: 1px solid var(--line); border-radius: 16px; padding: 14px; box-shadow: var(--shadow); min-width: 0; }
+.card h2 { font-size: 13px; margin: 0 0 10px; color: var(--ink-2); font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.hero { background: linear-gradient(160deg, var(--brand-2), var(--brand)); color: #fff7ed; border: 0; }
+.hero h2 { color: #fcd9b0; }
+.hero .big { font-size: 38px; font-weight: 700; line-height: 1.1; letter-spacing: -.5px; }
+.hero .khr { color: #fcd9b0; font-size: 13px; margin-top: 2px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.chip { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: rgba(255,255,255,.12); white-space: nowrap; }
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+.kpi { background: rgba(255,255,255,.08); border-radius: 12px; padding: 8px 10px; min-width: 0; }
+.kpi .l { font-size: 11px; color: #fcd9b0; }
+.kpi .v { font-size: 17px; font-weight: 700; }
+.grid2 { display: grid; gap: 14px; grid-template-columns: 1fr; }
+@media (min-width: 760px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+.stat-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.stat .l { font-size: 12px; color: var(--ink-3); }
+.stat .v { font-size: 22px; font-weight: 700; }
+.delta { font-size: 12px; font-weight: 600; }
+.up { color: var(--good); } .down { color: var(--bad); } .flat { color: var(--ink-3); }
+.seg { display: inline-flex; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 2px; }
+.seg button { border: 0; background: transparent; color: var(--ink-2); font: inherit; font-size: 12px; padding: 3px 10px; border-radius: 8px; cursor: pointer; }
+.seg button.on { background: var(--raised); color: var(--ink); font-weight: 600; box-shadow: var(--shadow); }
+.chart { position: relative; width: 100%; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.axis text { fill: var(--ink-3); font-size: 10px; font-family: system-ui, sans-serif; }
+.gridline { stroke: var(--grid); stroke-width: 1; }
+.legend { display: flex; gap: 14px; font-size: 12px; color: var(--ink-2); margin-top: 6px; flex-wrap: wrap; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.legend i.dash { height: 0; border-top: 2px dashed var(--s2); border-radius: 0; width: 14px; vertical-align: 3px; }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 12px; padding: 6px 9px; border-radius: 8px; white-space: nowrap; transform: translate(-50%, calc(-100% - 10px)); opacity: 0; transition: opacity .1s; z-index: 3; }
+.tip.on { opacity: 1; }
+.list { display: grid; gap: 2px; }
+.row { display: flex; align-items: center; gap: 10px; padding: 8px 2px; border-bottom: 1px solid var(--grid); min-width: 0; }
+.row:last-child { border-bottom: 0; }
+.row .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .sub { font-size: 11px; color: var(--ink-3); }
+.row .val { font-weight: 600; white-space: nowrap; }
+.rank { width: 22px; height: 22px; border-radius: 7px; background: var(--bg); color: var(--ink-2); font-size: 11px; display: grid; place-items: center; flex: none; font-weight: 700; }
+.bar { height: 6px; background: var(--grid); border-radius: 3px; margin-top: 4px; overflow: hidden; }
+.bar > span { display: block; height: 100%; background: var(--s1); border-radius: 3px; }
+.badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.b-bad { background: var(--bad-bg); color: var(--bad); }
+.b-warn { background: var(--warn-bg); color: var(--warn); }
+.b-good { background: var(--good-bg); color: var(--good); }
+.empty { color: var(--ink-3); font-size: 13px; padding: 10px 2px; text-align: center; }
+.muted { color: var(--ink-3); font-size: 12px; }
+.foot { text-align: center; color: var(--ink-3); font-size: 12px; display: grid; gap: 4px; }
+.foot button { background: none; border: 0; color: var(--ink-3); text-decoration: underline; font: inherit; cursor: pointer; }
+.alert { background: var(--bad-bg); color: var(--bad); border-radius: 12px; padding: 10px 12px; font-size: 13px; display: none; }
+.alert.on { display: block; }
+/* setup screen */
+.setup { max-width: 440px; margin: 40px auto; padding: 0 16px; }
+.setup .card { padding: 20px; }
+.setup h1 { font-size: 18px; margin: 0 0 6px; }
+.setup ol { padding-left: 20px; color: var(--ink-2); margin: 10px 0 16px; }
+.setup label { display: block; font-size: 12px; font-weight: 600; color: var(--ink-2); margin: 10px 0 4px; }
+.setup input { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; font-size: 13px; }
+.btn { width: 100%; margin-top: 16px; padding: 12px; border: 0; border-radius: 12px; background: var(--brand-2); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.skeleton { height: 120px; border-radius: 16px; background: linear-gradient(90deg, var(--raised), var(--grid), var(--raised)); background-size: 200% 100%; animation: sh 1.2s infinite; }
+@keyframes sh { to { background-position: -200% 0; } }
+.spin { animation: rot .8s linear infinite; display: inline-block; }
+@keyframes rot { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .skeleton, .spin { animation: none; } }
+</style>
+</head>
+<body>
+<div id="setup" class="setup" hidden>
+  <div class="card">
+    <h1>📱 Dashboard ម្ចាស់ហាង</h1>
+    <div class="muted">មើលចំណូល ស្តុក និងវេន ពីទូរស័ព្ទ</div>
+    <ol>
+      <li>នៅលើ POS ចូល <b>ការកំណត់ → Cloud Sync</b></li>
+      <li>ចុច <b>📱 Dashboard ម្ចាស់ហាង</b></li>
+      <li>ស្កេន QR ដោយកាមេរ៉ាទូរស័ព្ទ</li>
+    </ol>
+    <div class="muted">ឬ បញ្ចូលដោយដៃ៖</div>
+    <label for="in-url">Web App URL</label>
+    <input id="in-url" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
+    <label for="in-key">Dashboard Key</label>
+    <input id="in-key" placeholder="v..." autocomplete="off">
+    <button class="btn" id="btn-connect">ភ្ជាប់</button>
+    <div class="alert" id="setup-err" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<div id="app" hidden>
+  <header>
+    <div class="hrow">
+      <h1><span id="shop">Dashboard</span><small id="upd">កំពុងទាញទិន្នន័យ...</small></h1>
+      <button class="icon-btn" id="btn-theme" title="ពន្លឺ / ងងឹត" aria-label="ប្តូរពន្លឺ"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      <button class="icon-btn" id="btn-refresh" title="ទាញថ្មី" aria-label="ទាញថ្មី"><span id="ref-ic" style="display:inline-flex"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></span></button>
+    </div>
+  </header>
+  <main id="main">
+    <div class="alert" id="err"></div>
+    <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+  </main>
+</div>
+
+<script>
+'use strict';
+const LS = 'owner_dash_v1';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const usd = v => '$' + (Number(v) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const usd0 = v => '$' + Math.round(Number(v) || 0).toLocaleString('en-US');
+const KH_MONTH = ['មករា', 'កុម្ភៈ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា', 'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ'];
+const KH_DAY = ['អា', 'ច', 'អ', 'ព', 'ព្រ', 'សុ', 'ស'];
+const METHOD = { cash: 'សាច់ប្រាក់', khqr: 'KHQR', card: 'កាត', mixed: 'ចម្រុះ' };
+const ORDER = { 'dine-in': 'ញ៉ាំក្នុងហាង', takeaway: 'ខ្ចប់' };
+const dDate = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const fmtDay = s => { const d = dDate(s); return `${d.getDate()} ${KH_MONTH[d.getMonth()]}`; };
+
+let cfg = null, data = null, range = 14, topMode = 'today', timer = null;
+function load() { try { return JSON.parse(localStorage.getItem(LS) || 'null'); } catch (e) { return null; } }
+function save(c) { try { localStorage.setItem(LS, JSON.stringify(c)); } catch (e) { } }
+function validUrl(u) { return /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(u); }
+
+// Link from the POS QR: #u=<url>&k=<key>  (the hash is never sent to any server)
+(function readHash() {
+  if (!location.hash || location.hash.length < 5) return;
+  const p = new URLSearchParams(location.hash.slice(1));
+  const u = p.get('u'), k = p.get('k');
+  if (u && k && validUrl(u)) save({ url: u, key: k });
+  history.replaceState(null, '', location.pathname);
+})();
+
+// Theme toggle (remembered on this phone)
+(function theme() {
+  let t = null; try { t = localStorage.getItem(LS + '_theme'); } catch (e) { }
+  if (t) document.documentElement.dataset.theme = t;
+  $('btn-theme').onclick = () => {
+    const dark = document.documentElement.dataset.theme ? document.documentElement.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    const next = dark ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem(LS + '_theme', next); } catch (e) { }
+    if (data) render();
+  };
+})();
+
+async function api(c) {
+  const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 45000);
+  try {
+    const r = await fetch(c.url, { method: 'POST', redirect: 'follow', signal: ctrl.signal, headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ key: c.key, action: 'dashboard', days: 35 }) });
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+
+function showSetup(msg) {
+  $('app').hidden = true; $('setup').hidden = false;
+  if (cfg) { $('in-url').value = cfg.url; $('in-key').value = cfg.key; }
+  $('setup-err').textContent = msg || ''; $('setup-err').classList.toggle('on', !!msg);
+}
+$('btn-connect').onclick = async () => {
+  const c = { url: $('in-url').value.trim(), key: $('in-key').value.trim() };
+  if (!validUrl(c.url)) return showSetup('URL ត្រូវតែចប់ដោយ /exec');
+  if (!c.key) return showSetup('សូមបញ្ចូល Dashboard Key');
+  $('btn-connect').textContent = 'កំពុងភ្ជាប់...';
+  try {
+    const r = await api(c);
+    if (!r.ok) return showSetup(r.error === 'bad_key' ? 'Key មិនត្រឹមត្រូវ' : 'មានបញ្ហា៖ ' + r.error);
+    cfg = c; save(c); data = r; $('setup').hidden = true; $('app').hidden = false; render(); schedule();
+  } catch (e) { showSetup('ភ្ជាប់មិនបាន — ពិនិត្យអ៊ីនធឺណិត ឬ URL'); }
+  finally { $('btn-connect').textContent = 'ភ្ជាប់'; }
+};
+
+async function refresh(manual) {
+  if (!cfg) return;
+  $('ref-ic').classList.add('spin');
+  try {
+    const r = await api(cfg);
+    if (!r.ok) {
+      if (r.error === 'bad_key') return showSetup('Key ត្រូវបានប្តូរ — សូមស្កេន QR ថ្មីពី POS');
+      throw new Error(r.error);
+    }
+    data = r; $('err').classList.remove('on'); render();
+  } catch (e) {
+    $('err').textContent = '⚠️ ទាញទិន្នន័យមិនបាន' + (data ? ' — កំពុងបង្ហាញទិន្នន័យចុងក្រោយ' : '') + (manual ? '' : ' (នឹងព្យាយាមម្តងទៀត)');
+    $('err').classList.add('on');
+  } finally { $('ref-ic').classList.remove('spin'); }
+}
+function schedule() { clearInterval(timer); timer = setInterval(() => { if (!document.hidden) refresh(false); }, 60000); }
+document.addEventListener('visibilitychange', () => { if (!document.hidden && cfg && data && Date.now() - new Date(data.generatedAt) > 30000) refresh(false); });
+$('btn-refresh').onclick = () => refresh(true);
+
+function delta(cur, prev, label) {
+  if (!prev && !cur) return `<span class="delta flat">— ${label}</span>`;
+  if (!prev) return `<span class="delta up">▲ ថ្មី ${label}</span>`;
+  const p = (cur - prev) / prev * 100;
+  const cls = Math.abs(p) < 0.5 ? 'flat' : p > 0 ? 'up' : 'down';
+  const arrow = cls === 'flat' ? '■' : p > 0 ? '▲' : '▼';
+  return `<span class="delta ${cls}">${arrow} ${Math.abs(p).toFixed(0)}% ${label}</span>`;
+}
+function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+// ---------- charts (inline SVG, hover/touch tooltips) ----------
+function niceMax(v) { if (v <= 0) return 10; const p = Math.pow(10, Math.floor(Math.log10(v))); const n = v / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p; }
+function barChart(el, rows) {
+  const W = 640, H = 220, L = 40, R = 6, T = 10, B = 26;
+  const max = niceMax(Math.max(...rows.map(r => r.revenue)));
+  const n = rows.length, slot = (W - L - R) / n, bw = Math.max(3, Math.min(26, slot - 2));
+  const y = v => T + (H - T - B) * (1 - v / max);
+  let g = '';
+  for (let i = 0; i <= 4; i++) { const v = max * i / 4, yy = y(v); g += `<line class="gridline" x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}"/><text x="${L - 6}" y="${yy + 3}" text-anchor="end">${usd0(v)}</text>`; }
+  const every = n > 20 ? 5 : n > 10 ? 2 : 1;
+  let bars = '', labels = '', hits = '';
+  rows.forEach((r, i) => {
+    const x = L + slot * i + (slot - bw) / 2, yy = y(r.revenue), h = Math.max(0, H - B - yy);
+    const today = i === n - 1;
+    if (h > 0) bars += `<path d="M${x},${H - B} V${yy + Math.min(4, h)} q0,-${Math.min(4, h)} ${Math.min(4, bw / 2)},-${Math.min(4, h)} H${x + bw - Math.min(4, bw / 2)} q${Math.min(4, bw / 2)},0 ${Math.min(4, bw / 2)},${Math.min(4, h)} V${H - B} Z" fill="var(--s1)" opacity="${today ? 1 : .78}"/>`;
+    if ((n - 1 - i) % every === 0) { const d = dDate(r.date); labels += `<text x="${x + bw / 2}" y="${H - 8}" text-anchor="middle">${n <= 8 ? KH_DAY[d.getDay()] + ' ' : ''}${d.getDate()}</text>`; }
+    hits += `<rect x="${L + slot * i}" y="${T}" width="${slot}" height="${H - T - B}" fill="transparent" data-i="${i}"/>`;
+  });
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="ចំណូលប្រចាំថ្ងៃ"><g class="axis">${g}${labels}</g><line x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}" stroke="var(--line)"/>${bars}<g>${hits}</g></svg><div class="tip"></div>`;
+  hover(el, (i) => { const r = rows[i]; return `<b>${fmtDay(r.date)}</b> · ${usd(r.revenue)} · ${r.bills} វិក្កយបត្រ`; }, i => L + slot * i + slot / 2, W);
+}
+function lineChart(el, a, b) {
+  const W = 640, H = 200, L = 40, R = 8, T = 10, B = 24;
+  let first = a.findIndex((v, i) => v > 0 || b[i] > 0), last = 23 - [...a].reverse().findIndex((v, i) => v > 0 || b[23 - i] > 0);
+  if (first < 0) { first = 7; last = 20; }
+  first = Math.min(first, 7); last = Math.max(last, Math.min(23, new Date().getHours()), 18);
+  const hrs = []; for (let h = first; h <= last; h++) hrs.push(h);
+  const max = niceMax(Math.max(...hrs.map(h => Math.max(a[h], b[h]))));
+  const x = i => L + (W - L - R) * (hrs.length === 1 ? .5 : i / (hrs.length - 1));
+  const y = v => T + (H - T - B) * (1 - v / max);
+  let g = '';
+  for (let i = 0; i <= 4; i++) { const v = max * i / 4, yy = y(v); g += `<line class="gridline" x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}"/><text x="${L - 6}" y="${yy + 3}" text-anchor="end">${usd0(v)}</text>`; }
+  hrs.forEach((h, i) => { if (i % 2 === 0) g += `<text x="${x(i)}" y="${H - 7}" text-anchor="middle">${h}h</text>`; });
+  const nowH = new Date().getHours();
+  const pathA = hrs.filter(h => h <= nowH || a[h] > 0).map((h, i) => `${i ? 'L' : 'M'}${x(hrs.indexOf(h))},${y(a[h])}`).join(' ');
+  const pathB = hrs.map((h, i) => `${i ? 'L' : 'M'}${x(i)},${y(b[h])}`).join(' ');
+  let hits = '';
+  const step = (W - L - R) / Math.max(1, hrs.length - 1);
+  hrs.forEach((h, i) => hits += `<rect x="${x(i) - step / 2}" y="${T}" width="${step}" height="${H - T - B}" fill="transparent" data-i="${i}"/>`);
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="ចំណូលតាមម៉ោង"><g class="axis">${g}</g><line x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}" stroke="var(--line)"/>
+    <path d="${pathB}" fill="none" stroke="var(--s2)" stroke-width="2" stroke-dasharray="5 4" stroke-linejoin="round"/>
+    <path d="${pathA}" fill="none" stroke="var(--s1)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <line class="xh" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="var(--ink-3)" stroke-width="1" opacity="0"/>
+    <g>${hits}</g></svg><div class="tip"></div>`;
+  hover(el, i => `<b>${hrs[i]}:00–${hrs[i] + 1}:00</b><br>ថ្ងៃនេះ ${usd(a[hrs[i]])} · សប្តាហ៍មុន ${usd(b[hrs[i]])}`, i => x(i), W, true);
+}
+function hover(el, text, xAt, W, crosshair) {
+  const svg = el.querySelector('svg'), tip = el.querySelector('.tip'), xh = el.querySelector('.xh');
+  const show = e => {
+    const t = e.target.closest('[data-i]'); if (!t) return;
+    const i = Number(t.dataset.i), scale = svg.getBoundingClientRect().width / W, px = xAt(i) * scale;
+    tip.innerHTML = text(i); tip.classList.add('on');
+    const half = tip.offsetWidth / 2, maxX = el.clientWidth - half;
+    tip.style.left = Math.min(Math.max(px, half), maxX) + 'px'; tip.style.top = '24px';
+    if (xh && crosshair) { xh.setAttribute('x1', xAt(i)); xh.setAttribute('x2', xAt(i)); xh.setAttribute('opacity', '.6'); }
+  };
+  const hide = () => { tip.classList.remove('on'); if (xh) xh.setAttribute('opacity', '0'); };
+  svg.addEventListener('mousemove', show); svg.addEventListener('mouseleave', hide);
+  svg.addEventListener('touchstart', show, { passive: true }); svg.addEventListener('click', show);
+}
+
+// ---------- page ----------
+function render() {
+  const d = data;
+  document.title = d.shopName + ' — Dashboard';
+  $('shop').textContent = '📊 ' + d.shopName;
+  const gen = new Date(d.generatedAt);
+  $('upd').textContent = 'ធ្វើបច្ចុប្បន្នភាព ' + gen.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + (d.lastSaleAt ? ' · លក់ចុងក្រោយ ' + d.lastSaleAt.slice(11, 16) : '');
+  const byDate = {}; d.days.forEach(x => byDate[x.date] = x);
+  const t = byDate[d.today] || { revenue: 0, bills: 0, profit: 0, cogs: 0, discount: 0 };
+  const yd = byDate[d.yesterday] || { revenue: 0, bills: 0 };
+  const wk = byDate[d.weekAgo] || { revenue: 0, bills: 0 };
+  const avg = t.bills ? t.revenue / t.bills : 0;
+  const margin = t.revenue ? t.profit / t.revenue * 100 : 0;
+  const last7 = d.days.slice(-7).reduce((s, x) => s + x.revenue, 0), prev7 = d.days.slice(-14, -7).reduce((s, x) => s + x.revenue, 0);
+  const rows = d.days.slice(-range);
+  const maxMethod = Math.max(1, ...Object.values(d.methods));
+  const top = topMode === 'today' ? d.topToday : d.topItems;
+  const maxTop = Math.max(1, ...top.map(x => x.qty));
+  const devs = Object.entries(d.devices || {});
+
+  $('main').innerHTML = `
+  <div class="alert ${$('err') && $('err').classList.contains('on') ? 'on' : ''}" id="err">${$('err') ? esc($('err').textContent) : ''}</div>
+  <section class="card hero">
+    <h2>ចំណូលថ្ងៃនេះ · ${fmtDay(d.today)}</h2>
+    <div class="big num">${usd(t.revenue)}</div>
+    <div class="khr num">≈ ${Math.round(t.revenue * d.rate / 100) * 100 > 0 ? (Math.round(t.revenue * d.rate / 100) * 100).toLocaleString('en-US') : 0} ៛</div>
+    <div class="chips">
+      <span class="chip">${deltaPlain(t.revenue, yd.revenue)} ធៀបម្សិលមិញ (${usd0(yd.revenue)})</span>
+      <span class="chip">${deltaPlain(t.revenue, wk.revenue)} ធៀបថ្ងៃដដែលសប្តាហ៍មុន</span>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="l">វិក្កយបត្រ</div><div class="v num">${t.bills}</div></div>
+      <div class="kpi"><div class="l">មធ្យម/វិក្កយបត្រ</div><div class="v num">${usd(avg)}</div></div>
+      <div class="kpi"><div class="l">ចំណេញ${t.cogs ? '' : ' *'}</div><div class="v num">${usd(t.profit)}</div></div>
+    </div>
+    ${t.cogs ? `<div class="chips"><span class="chip">Margin ${margin.toFixed(0)}%</span>${t.discount ? `<span class="chip">បញ្ចុះតម្លៃ ${usd(t.discount)}</span>` : ''}${d.voidedToday ? `<span class="chip">⚠️ Void ${d.voidedToday} (${usd(d.voidedTodayAmt)})</span>` : ''}</div>`
+      : `<div class="chips"><span class="chip">* ដាក់ថ្លៃដើមគ្រឿងផ្សំក្នុង POS ដើម្បីឃើញចំណេញពិត</span>${d.voidedToday ? `<span class="chip">⚠️ Void ${d.voidedToday}</span>` : ''}</div>`}
+  </section>
+
+  <div class="grid2">
+    <section class="card">
+      <h2>ខែនេះ (${KH_MONTH[dDate(d.today).getMonth()]})</h2>
+      <div class="stat-row">
+        <div class="stat"><div class="l">ចំណូល</div><div class="v num">${usd0(d.month.revenue)}</div>${delta(d.month.revenue, d.prevMonth.revenue, 'ធៀបខែមុន')}</div>
+        <div class="stat"><div class="l">វិក្កយបត្រ</div><div class="v num">${d.month.bills.toLocaleString('en-US')}</div>${delta(d.month.bills, d.prevMonth.bills, 'ធៀបខែមុន')}</div>
+      </div>
+      <div class="muted" style="margin-top:8px">ធៀបនឹងថ្ងៃដដែលនៃខែមុន (១ – ${dDate(d.today).getDate()})</div>
+    </section>
+    <section class="card">
+      <h2>៧ ថ្ងៃចុងក្រោយ</h2>
+      <div class="stat-row">
+        <div class="stat"><div class="l">ចំណូល</div><div class="v num">${usd0(last7)}</div>${delta(last7, prev7, 'ធៀប ៧ ថ្ងៃមុន')}</div>
+        <div class="stat"><div class="l">មធ្យម/ថ្ងៃ</div><div class="v num">${usd0(last7 / 7)}</div><span class="delta flat">ចំណេញ ${usd0(d.days.slice(-7).reduce((s, x) => s + x.profit, 0))}</span></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>ចំណូលប្រចាំថ្ងៃ <span class="seg" id="seg-range"><button data-r="7" class="${range === 7 ? 'on' : ''}">៧ ថ្ងៃ</button><button data-r="14" class="${range === 14 ? 'on' : ''}">១៤ ថ្ងៃ</button><button data-r="30" class="${range === 30 ? 'on' : ''}">៣០ ថ្ងៃ</button></span></h2>
+    <div class="chart" id="ch-days"></div>
+  </section>
+
+  <div class="grid2">
+    <section class="card">
+      <h2>ម៉ោងលក់ — ថ្ងៃនេះ ធៀបថ្ងៃដដែលសប្តាហ៍មុន</h2>
+      <div class="chart" id="ch-hours"></div>
+      <div class="legend"><span><i style="background:var(--s1)"></i>ថ្ងៃនេះ</span><span><i class="dash"></i>${fmtDay(d.weekAgo)}</span></div>
+    </section>
+    <section class="card">
+      <h2>ការទូទាត់ថ្ងៃនេះ</h2>
+      <div class="list">${Object.keys(d.methods).length ? Object.entries(d.methods).sort((a, b) => b[1] - a[1]).map(([m, v]) => `
+        <div class="row" style="display:block"><div style="display:flex;justify-content:space-between"><span>${esc(METHOD[m] || m)}</span><span class="val num">${usd(v)} <span class="muted">${(v / (t.revenue || 1) * 100).toFixed(0)}%</span></span></div>
+        <div class="bar"><span style="width:${v / maxMethod * 100}%"></span></div></div>`).join('') : '<div class="empty">មិនទាន់មានការលក់ថ្ងៃនេះ</div>'}
+      </div>
+      ${Object.keys(d.cashiers).length ? `<h2 style="margin-top:14px">តាមអ្នកគិតលុយ</h2><div class="list">${Object.entries(d.cashiers).sort((a, b) => b[1] - a[1]).map(([c, v]) => `<div class="row"><span class="name">${esc(c)}</span><span class="val num">${usd(v)}</span></div>`).join('')}</div>` : ''}
+    </section>
+  </div>
+
+  <div class="grid2">
+    <section class="card">
+      <h2>🏆 មុខម្ហូបលក់ដាច់ <span class="seg" id="seg-top"><button data-t="today" class="${topMode === 'today' ? 'on' : ''}">ថ្ងៃនេះ</button><button data-t="week" class="${topMode === 'week' ? 'on' : ''}">៧ ថ្ងៃ</button></span></h2>
+      <div class="list">${top.length ? top.map((x, i) => `
+        <div class="row"><span class="rank num">${i + 1}</span><div class="name"><div style="overflow:hidden;text-overflow:ellipsis">${esc(x.name)}</div><div class="bar"><span style="width:${x.qty / maxTop * 100}%"></span></div></div>
+        <div style="text-align:right"><div class="val num">${x.qty}</div><div class="sub num">${usd(x.revenue)}</div></div></div>`).join('') : '<div class="empty">មិនទាន់មានទិន្នន័យ</div>'}
+      </div>
+    </section>
+    <section class="card">
+      <h2>📦 ស្តុកជិតអស់ <span class="badge ${d.lowStock.length ? 'b-bad' : 'b-good'}">${d.lowStock.length ? '⚠️ ' + d.lowStock.length + ' មុខ' : '✓ គ្រប់គ្រាន់'}</span></h2>
+      <div class="list">${d.lowStock.length ? d.lowStock.map(r => `
+        <div class="row"><span class="name">${esc(r.name)}</span><span class="badge ${r.stock <= 0 ? 'b-bad' : 'b-warn'}">${r.stock <= 0 ? '⛔ អស់' : '⚠️ ទាប'}</span><span class="val num">${r.stock.toLocaleString('en-US')} ${esc(r.unit)}</span></div>`).join('')
+        : `<div class="empty">ស្តុកទាំង ${d.inventoryCount} មុខ នៅលើកម្រិត Alert</div>`}
+      </div>
+    </section>
+  </div>
+
+  <div class="grid2">
+    <section class="card">
+      <h2>🚫 Void ៧ ថ្ងៃចុងក្រោយ <span class="badge ${d.voids.length ? 'b-warn' : 'b-good'}">${d.voids.length}</span></h2>
+      <div class="list">${d.voids.length ? d.voids.map(v => `
+        <div class="row"><div class="name"><div>${v.type === 'bill' ? '🧾 វិក្កយបត្រ ' + esc(v.invId) : esc(v.qty + '× ' + v.item)}</div>
+        <div class="sub">${fmtDay(v.date)} ${esc(v.time)} · ${esc(v.table)} · ${esc(v.by)} → អនុម័ត ${esc(v.approvedBy)}${v.reason ? ' · "' + esc(v.reason) + '"' : ''}</div></div>
+        <span class="val num">${usd(v.amount)}</span></div>`).join('') : '<div class="empty">គ្មាន Void ✓</div>'}
+      </div>
+    </section>
+    <section class="card">
+      <h2>💰 វេនចុងក្រោយ</h2>
+      <div class="list">${d.shifts.length ? d.shifts.map(s => {
+        const vb = Math.abs(s.variance) < 0.01 ? ['b-good', '✓ ត្រូវ'] : Math.abs(s.variance) <= 1 ? ['b-warn', (s.variance > 0 ? '+' : '') + usd(s.variance)] : ['b-bad', (s.variance > 0 ? '+' : '') + usd(s.variance)];
+        const end = s.end ? new Date(s.end) : null;
+        return `<div class="row"><div class="name"><div>${end && !isNaN(end) ? end.getDate() + ' ' + KH_MONTH[end.getMonth()] + ' ' + end.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '-'} · ${esc(s.closedBy)}</div>
+        <div class="sub num">${s.bills} វិក្កយបត្រ · Cash ${usd(s.cash)} · KHQR ${usd(s.khqr)}</div></div>
+        <div style="text-align:right"><div class="val num">${usd(s.net)}</div><span class="badge ${vb[0]}">${vb[1]}</span></div></div>`; }).join('') : '<div class="empty">មិនទាន់មានការបិទវេន</div>'}
+      </div>
+    </section>
+  </div>
+
+  <div class="foot">
+    <div>${devs.length ? 'ម៉ាស៊ីន៖ ' + devs.map(([k, v]) => `${esc(k)} Sync ${ago(v)}`).join(' · ') : ''}</div>
+    <div>ទិន្នន័យពី Google Sheet · ទាញថ្មីរៀងរាល់ ១ នាទី</div>
+    <div><button id="btn-logout">ផ្តាច់ទូរស័ព្ទនេះ</button></div>
+  </div>`;
+
+  barChart($('ch-days'), rows);
+  lineChart($('ch-hours'), d.hours, d.hoursPrev);
+  $('seg-range').onclick = e => { const b = e.target.closest('button'); if (b) { range = Number(b.dataset.r); render(); } };
+  $('seg-top').onclick = e => { const b = e.target.closest('button'); if (b) { topMode = b.dataset.t; render(); } };
+  $('btn-logout').onclick = () => { if (confirm('ផ្តាច់ Dashboard ពីទូរស័ព្ទនេះ?')) { try { localStorage.removeItem(LS); } catch (e) { } cfg = null; data = null; clearInterval(timer); showSetup(''); $('in-url').value = ''; $('in-key').value = ''; } };
+}
+function deltaPlain(cur, prev) {
+  if (!prev) return cur ? '▲' : '—';
+  const p = (cur - prev) / prev * 100;
+  return (Math.abs(p) < 0.5 ? '■ 0%' : (p > 0 ? '▲ ' : '▼ ') + Math.abs(p).toFixed(0) + '%');
+}
+function ago(iso) {
+  const s = (Date.now() - new Date(iso)) / 1000;
+  if (isNaN(s)) return '-';
+  if (s < 90) return 'ទើបតែ'; if (s < 3600) return Math.round(s / 60) + ' នាទីមុន';
+  if (s < 86400) return Math.round(s / 3600) + ' ម៉ោងមុន'; return Math.round(s / 86400) + ' ថ្ងៃមុន';
+}
+
+cfg = load();
+if (!cfg) showSetup('');
+else { $('app').hidden = false; refresh(false); schedule(); }
+</script>
+</body>
+</html>

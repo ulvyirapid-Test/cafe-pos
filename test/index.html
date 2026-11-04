@@ -597,6 +597,7 @@
                         <button onclick="saveCloudSettings()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 py-2 rounded-lg"><i class="fa-solid fa-plug"></i> រក្សាទុក & សាកល្បង</button>
                         <button onclick="manualSync()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-4 py-2 rounded-lg"><i class="fa-solid fa-rotate"></i> Sync ឥឡូវ</button>
                         <button onclick="uploadHistory()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-4 py-2 rounded-lg"><i class="fa-solid fa-clock-rotate-left"></i> ផ្ញើប្រវត្តិលក់ចាស់ឡើង</button>
+                        <button onclick="openOwnerDashboard()" class="bg-amber-800 hover:bg-amber-900 text-white font-bold px-4 py-2 rounded-lg"><i class="fa-solid fa-mobile-screen"></i> Dashboard ម្ចាស់ហាង</button>
                     </div>
                     <div id="cloud-status" class="text-slate-500"></div>
                 </div>
@@ -965,6 +966,29 @@
             </div>
             <div class="bg-slate-50 px-4 py-3 border-t border-slate-200">
                 <button onclick="closeRecoveryModal()" class="w-full py-2 text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg">រួចរាល់</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: Owner dashboard link ================= -->
+    <div id="modal-dashboard" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm overflow-hidden">
+            <div class="bg-amber-900 text-white px-4 py-3 flex justify-between items-center">
+                <h3 class="font-bold text-sm"><i class="fa-solid fa-mobile-screen"></i> Dashboard ម្ចាស់ហាង</h3>
+                <button onclick="closeModal('modal-dashboard')" class="text-white font-bold text-xl leading-none">&times;</button>
+            </div>
+            <div class="p-4 space-y-3 text-xs text-center">
+                <p class="text-slate-600">ស្កេន QR នេះដោយ <strong>កាមេរ៉ាទូរស័ព្ទម្ចាស់ហាង</strong> ដើម្បីមើលចំណូល ស្តុក Void និងវេន ពីកន្លែងណាក៏បាន។</p>
+                <div id="dash-qr" style="width:220px;height:220px" class="mx-auto bg-white border border-slate-200 rounded-xl p-2 flex items-center justify-center text-slate-400">...</div>
+                <div class="flex gap-2 justify-center">
+                    <button onclick="copyDashboardLink()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 font-bold rounded-lg"><i class="fa-solid fa-copy"></i> Copy Link</button>
+                    <button onclick="openDashboardHere()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 font-bold rounded-lg"><i class="fa-solid fa-up-right-from-square"></i> បើកនៅទីនេះ</button>
+                </div>
+                <p class="text-left text-slate-500">✔ Dashboard <strong>មើលបានតែប៉ុណ្ណោះ</strong> — មិនអាចលក់ ឬកែទិន្នន័យទេ<br>✔ ផ្ញើ Link តែឲ្យម្ចាស់ហាង / អ្នកដែលទុកចិត្ត<br>✔ បាត់ទូរស័ព្ទ? ចុច "ប្តូរ Key" ដើម្បីបិទ Link ចាស់</p>
+            </div>
+            <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 flex gap-2">
+                <button onclick="resetDashboardKey()" class="flex-1 py-2 text-xs font-semibold bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg"><i class="fa-solid fa-rotate"></i> ប្តូរ Key</button>
+                <button onclick="closeModal('modal-dashboard')" class="flex-1 py-2 text-xs font-bold bg-amber-800 hover:bg-amber-900 text-white rounded-lg">រួចរាល់</button>
             </div>
         </div>
     </div>
@@ -3991,7 +4015,7 @@
             if (e.key === 'Enter' && isOpen('modal-checkout')) { e.preventDefault(); confirmCheckout(); return; }
             if (e.key === 'Enter' && isOpen('modal-customization') && document.activeElement.tagName !== 'BUTTON') { confirmAddToCart(); return; }
             if (e.key === 'Escape') editingCartId = null;
-            if (e.key === 'Escape') ['modal-checkout', 'modal-mixed', 'modal-split', 'modal-customer', 'modal-purchase', 'modal-count', 'modal-customization', 'modal-khqr', 'modal-receipt', 'modal-table-transfer', 'modal-ingredient', 'modal-menu', 'modal-staff'].forEach(closeModal);
+            if (e.key === 'Escape') ['modal-checkout', 'modal-mixed', 'modal-split', 'modal-customer', 'modal-purchase', 'modal-count', 'modal-customization', 'modal-khqr', 'modal-receipt', 'modal-table-transfer', 'modal-ingredient', 'modal-menu', 'modal-staff', 'modal-dashboard'].forEach(closeModal);
         });
 
         // ==================== NUMBER FIELDS WORK WITH THE KHMER KEYBOARD ====================
@@ -4739,6 +4763,57 @@
             closeModal('modal-forgot');
             selectLoginStaff(user.id);
             showToast(`បានកំណត់ PIN ថ្មីសម្រាប់ ${user.name} — សូម Login ហើយបង្កើតលេខកូដសង្គ្រោះថ្មី`, "success");
+        }
+
+        // ==================== OWNER DASHBOARD LINK ====================
+        let dashLink = '';
+        function dashboardBase() { return new URL(location.pathname.includes('/test/') ? '../dashboard/' : 'dashboard/', location.href).href; }
+        async function openOwnerDashboard(reset) {
+            if (!need('settings')) return;
+            if (!cloudOn()) { showToast("សូមភ្ជាប់ Cloud Sync ជាមុនសិន", "warning"); return; }
+            openModal('modal-dashboard');
+            const box = document.getElementById('dash-qr');
+            box.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-2xl"></i>';
+            try {
+                const res = await cloudPost({ action: 'viewKey', reset: !!reset });
+                if (!res || !res.ok || !res.viewKey) throw new Error(res && res.error === 'unknown_action' ? 'old' : (res && res.error) || 'no response');
+                dashLink = `${dashboardBase()}#u=${encodeURIComponent(cloud.url)}&k=${encodeURIComponent(res.viewKey)}`;
+                if (reset) audit('ប្តូរ Dashboard Key', 'Link ចាស់លែងប្រើបាន', true);
+                await drawQr(box, dashLink);
+            } catch (e) {
+                dashLink = '';
+                box.innerHTML = `<span class="text-rose-600 text-[11px] leading-snug">ទាញ Key មិនបាន។<br>${e.message === 'old' || /viewKey/.test(e.message) ? 'សូម Update Apps Script (Code.gs v2) ហើយ Deploy Version ថ្មី' : 'ពិនិត្យអ៊ីនធឺណិត ហើយសាកម្តងទៀត'}</span>`;
+            }
+        }
+        // QR generator (MIT, Kazuhiko Arase) served from this site: lib/qrcode.js
+        function loadQrLib() {
+            if (window.qrcode) return Promise.resolve();
+            return new Promise((ok, fail) => {
+                const sc = document.createElement('script');
+                sc.src = new URL(location.pathname.includes('/test/') ? '../lib/qrcode.js' : 'lib/qrcode.js', location.href).href;
+                sc.onload = ok; sc.onerror = fail; document.head.appendChild(sc);
+            });
+        }
+        async function drawQr(box, text) {
+            try {
+                await loadQrLib();
+                const qr = qrcode(0, 'M');
+                qrcode.stringToBytes = qrcode.stringToBytesFuncs['UTF-8'] || qrcode.stringToBytes;
+                qr.addData(text, 'Byte'); qr.make();
+                box.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+                const svg = box.querySelector('svg'); if (svg) { svg.style.width = '100%'; svg.style.height = '100%'; }
+            } catch (e) { box.innerHTML = '<span class="text-[11px]">បង្ហាញ QR មិនបាន — ប្រើ Copy Link ជំនួស</span>'; }
+        }
+        async function copyDashboardLink() {
+            if (!dashLink) return;
+            try { await navigator.clipboard.writeText(dashLink); showToast("បាន Copy Link", "success"); }
+            catch (e) { prompt('Copy Link នេះ:', dashLink); }
+        }
+        function openDashboardHere() { if (dashLink) window.open(dashLink, '_blank', 'noopener'); }
+        async function resetDashboardKey() {
+            if (!confirm('ប្តូរ Key? ទូរស័ព្ទដែលភ្ជាប់រួច នឹងត្រូវស្កេន QR ថ្មី។')) return;
+            const ok = await askManager({ title: 'ប្តូរ Dashboard Key', perm: 'settings' });
+            if (ok) openOwnerDashboard(true);
         }
 
 
