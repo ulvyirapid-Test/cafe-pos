@@ -82,6 +82,7 @@ function processEvents(events, device) {
   const push = (name, row) => (add[name] = add[name] || []).push(row);
   const saleVoids = [];           // bill voids to mark on the Sales sheet
   const configWrites = [];
+  const purges = [];
   const processed = [];
   const now = new Date();
 
@@ -159,6 +160,7 @@ function processEvents(events, device) {
         push('StockLog', [dt[0], dt[1], 'count/set', '', `${(p.items || []).length} items`, '', '', '', '', device]);
         break;
       }
+      case 'purge': purges.push(p); break;
       case 'config': configWrites.push({ key: String(p.key), value: p.value }); break;
       case 'configDelete': configWrites.push({ key: String(p.key), remove: true }); break;
     }
@@ -166,10 +168,44 @@ function processEvents(events, device) {
   });
 
   Object.keys(add).forEach(name => appendRows(ss.getSheetByName(name), add[name]));
+  purges.forEach(p => purge(p, device));
   if (saleVoids.length) markVoided(ss, saleVoids);
   if (inv.changed) saveInventory(inv);
   if (configWrites.length) writeConfig(configWrites, device);
   return processed;
+}
+
+// ============================ PURGE (POS "លុប / Reset ទិន្នន័យ" with "លុបនៅ Google Sheet ដែរ") ============================
+// Rewrites a sheet keeping only the rows that pass keep(rowObject). Returns how many rows were removed.
+function rewriteSheet(name, keep) {
+  const sh = SpreadsheetApp.getActive().getSheetByName(name);
+  if (!sh || sh.getLastRow() < 2) return 0;
+  const width = sh.getLastColumn();
+  const vals = sh.getRange(2, 1, sh.getLastRow() - 1, width).getValues();
+  const head = SHEETS[name];
+  const kept = vals.filter(r => { const o = {}; head.forEach((h, i) => o[h] = r[i]); return keep(o); });
+  if (kept.length === vals.length) return 0;
+  sh.getRange(2, 1, vals.length, width).clearContent();
+  if (kept.length) sh.getRange(2, 1, kept.length, width).setValues(kept);
+  return vals.length - kept.length;
+}
+function purge(p, device) {
+  const inRange = r => {
+    if (p.all || (!p.from && !p.to)) return true;
+    const d = cellDate(r.date, 'yyyy-MM-dd');
+    return d >= p.from && d <= p.to;
+  };
+  const removed = {};
+  if (p.sales || p.all) {
+    removed.sales = rewriteSheet('Sales', r => !inRange(r));
+    removed.items = rewriteSheet('SaleItems', r => !inRange(r));
+  }
+  if (p.voids || p.all) removed.voids = rewriteSheet('Voids', r => !(p.all || p.voids));
+  if (p.shifts || p.all) removed.shifts = rewriteSheet('Shifts', r => false);
+  if (p.stocklog || p.all) removed.stocklog = rewriteSheet('StockLog', r => false);
+  const dt = splitDate(new Date().toISOString());
+  appendRows(SpreadsheetApp.getActive().getSheetByName('StockLog'),
+    [[dt[0], dt[1], 'purge', '', JSON.stringify(removed).slice(0, 200), '', '', '', (p.all ? 'factory' : (p.from || '') + '→' + (p.to || '')), device]]);
 }
 
 // ============================ STOCK ============================
