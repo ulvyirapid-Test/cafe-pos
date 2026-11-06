@@ -751,6 +751,11 @@
                             <label class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-3 py-2 rounded-lg cursor-pointer"><i class="fa-solid fa-file-import"></i> Import Backup<input type="file" accept="application/json,.json" class="hidden" onchange="importBackup(this)"></label>
                         </div>
                     </div>
+                    <div data-perm="reset" class="bg-white p-4 rounded-xl border border-rose-200 shadow-sm space-y-2 text-xs">
+                        <h3 class="font-bold text-rose-700 text-sm"><i class="fa-solid fa-trash-can"></i> លុប / Reset ទិន្នន័យ</h3>
+                        <p class="text-slate-500">លុបប្រវត្តិលក់តាមថ្ងៃ, ស្តុក, វេន, Void, សមាជិក ឬ Reset ទាំងអស់។ POS ធ្វើ Backup ដោយស្វ័យប្រវត្តិមុនលុប ហើយត្រូវបញ្ជាក់ PIN។</p>
+                        <button onclick="openResetModal()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-2 rounded-lg"><i class="fa-solid fa-trash-can"></i> បើកផ្ទាំងលុបទិន្នន័យ</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -959,6 +964,53 @@
             </div>
             <div class="bg-slate-50 px-4 py-3 border-t border-slate-200">
                 <button onclick="closeRecoveryModal()" class="w-full py-2 text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg">រួចរាល់</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: Reset / delete data ================= -->
+    <div id="modal-reset" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden flex flex-col" style="max-height:92vh">
+            <div class="bg-rose-700 text-white px-4 py-3 flex justify-between items-center">
+                <h3 class="font-bold text-sm"><i class="fa-solid fa-trash-can"></i> លុប / Reset ទិន្នន័យ</h3>
+                <button onclick="closeModal('modal-reset')" class="text-white font-bold text-xl leading-none">&times;</button>
+            </div>
+            <div class="p-4 space-y-3 text-xs overflow-y-auto">
+                <div class="bg-amber-50 border border-amber-200 text-amber-900 rounded-lg p-2">⚠️ ទិន្នន័យដែលលុបហើយ <b>មិនអាចយកមកវិញបានទេ</b> លើកលែងតែពី Backup។ POS នឹងទាញយក Backup ឲ្យមុនលុប។</div>
+                <label class="block border rounded-lg p-2.5 hover:bg-slate-50 cursor-pointer">
+                    <span class="flex items-center gap-2 font-bold text-slate-800"><input type="checkbox" id="rs-sales" onchange="resetPreview()"> 🧾 ប្រវត្តិលក់ (តាមថ្ងៃ)</span>
+                    <span class="flex items-center gap-2 mt-2 pl-6 flex-wrap">ពី <input type="date" id="rs-from" onchange="resetPreview()" class="p-1 border rounded"> ដល់ <input type="date" id="rs-to" onchange="resetPreview()" class="p-1 border rounded"></span>
+                    <span class="block pl-6 mt-1 text-slate-500" id="rs-sales-info"></span>
+                </label>
+                <label class="flex items-center gap-2 border rounded-lg p-2.5 hover:bg-slate-50 cursor-pointer font-bold text-slate-800"><input type="checkbox" id="rs-stock" onchange="resetPreview()"> 📦 កំណត់ស្តុកទាំងអស់ = 0 <span class="font-normal text-slate-500" id="rs-stock-info"></span></label>
+                <label class="flex items-center gap-2 border rounded-lg p-2.5 hover:bg-slate-50 cursor-pointer font-bold text-slate-800"><input type="checkbox" id="rs-stocklog" onchange="resetPreview()"> 🧮 ប្រវត្តិទិញចូល & រាប់ស្តុក <span class="font-normal text-slate-500" id="rs-stocklog-info"></span></label>
+                <label class="flex items-center gap-2 border rounded-lg p-2.5 hover:bg-slate-50 cursor-pointer font-bold text-slate-800"><input type="checkbox" id="rs-shifts" onchange="resetPreview()"> 💰 ប្រវត្តិវេន (X/Z Report) <span class="font-normal text-slate-500" id="rs-shifts-info"></span></label>
+                <label class="flex items-center gap-2 border rounded-lg p-2.5 hover:bg-slate-50 cursor-pointer font-bold text-slate-800"><input type="checkbox" id="rs-voids" onchange="resetPreview()"> 🚫 Void Log <span class="font-normal text-slate-500" id="rs-voids-info"></span></label>
+                <div class="border rounded-lg p-2.5">
+                    <label class="flex items-center gap-2 font-bold text-slate-800 cursor-pointer"><input type="checkbox" id="rs-cust" onchange="resetPreview()"> ⭐ សមាជិក <span class="font-normal text-slate-500" id="rs-cust-info"></span></label>
+                    <div class="pl-6 mt-1 flex gap-4">
+                        <label class="flex items-center gap-1 cursor-pointer"><input type="radio" name="rs-cust-mode" value="points" checked onchange="resetPreview()"> Reset ពិន្ទុ = 0</label>
+                        <label class="flex items-center gap-1 cursor-pointer"><input type="radio" name="rs-cust-mode" value="delete" onchange="resetPreview()"> លុបសមាជិកទាំងអស់</label>
+                    </div>
+                </div>
+                <label class="block border-2 border-rose-300 bg-rose-50 rounded-lg p-2.5 cursor-pointer">
+                    <span class="flex items-center gap-2 font-bold text-rose-800"><input type="checkbox" id="rs-factory" onchange="resetPreview()"> 🔥 Reset ទាំងអស់ (Factory)</span>
+                    <span class="block pl-6 mt-1 text-rose-700">លុបការលក់ទាំងអស់ (រួម Archive), តុដែលកំពុងបើក, វេន, Void, ទិញចូល/រាប់ស្តុក, សមាជិក និងកំណត់ស្តុក = 0។<br><b>រក្សាទុក៖</b> Menu, គ្រឿងផ្សំ, បុគ្គលិក & PIN, ការកំណត់, Cloud Sync, Audit Log។</span>
+                </label>
+                <label id="rs-cloud-row" class="flex items-start gap-2 border rounded-lg p-2.5 bg-sky-50 border-sky-200 cursor-pointer">
+                    <input type="checkbox" id="rs-cloud" class="mt-0.5" onchange="resetPreview()">
+                    <span><b>☁️ លុបនៅលើ Google Sheet ដែរ</b><br><span class="text-slate-600">មិនធីក = Sheet រក្សាទុកជា Backup (Dashboard នៅតែឃើញ)។ ចំណាំ៖ ស្តុកប្រើរួមជាមួយ Sheet ដូច្នេះ "ស្តុក = 0" នឹងកំណត់នៅលើ Sheet ជានិច្ច។</span></span>
+                </label>
+                <div id="rs-summary" class="bg-slate-50 border rounded-lg p-2.5 text-slate-700"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="block font-semibold text-slate-600 mb-1">វាយពាក្យ <b class="text-rose-700">RESET</b></label><input id="rs-confirm" oninput="resetPreview()" autocomplete="off" class="w-full p-2 border rounded-lg outline-none uppercase" placeholder="RESET"></div>
+                    <div><label class="block font-semibold text-slate-600 mb-1">PIN របស់អ្នក</label><input id="rs-pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off" class="w-full p-2 border rounded-lg outline-none" placeholder="••••••"></div>
+                </div>
+                <div><label class="block font-semibold text-slate-600 mb-1">មូលហេតុ</label><input id="rs-reason" maxlength="120" class="w-full p-2 border rounded-lg outline-none" placeholder="ឧ. លុបវិក្កយបត្រសាកល្បងមុនបើកហាង"></div>
+            </div>
+            <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 flex gap-2">
+                <button onclick="closeModal('modal-reset')" class="flex-1 py-2.5 text-xs font-bold bg-slate-200 hover:bg-slate-300 rounded-lg">បោះបង់</button>
+                <button id="rs-go" onclick="runReset()" disabled class="flex-1 py-2.5 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"><i class="fa-solid fa-trash-can"></i> Backup & លុប</button>
             </div>
         </div>
     </div>
@@ -1835,7 +1887,8 @@
             { key: 'customers', label: 'គ្រប់គ្រងអតិថិជន & ពិន្ទុ' },
             { key: 'menu', label: 'បន្ថែម/កែ/លុប Menu, តម្លៃ, Topping' },
             { key: 'settings', label: 'ការកំណត់ហាង, VAT, Sync, Backup, សុវត្ថិភាព' },
-            { key: 'staff', label: 'គ្រប់គ្រងបុគ្គលិក & សិទ្ធិ' }
+            { key: 'staff', label: 'គ្រប់គ្រងបុគ្គលិក & សិទ្ធិ' },
+            { key: 'reset', label: '⚠️ លុប / Reset ទិន្នន័យ (លក់, ស្តុក, វេន, សមាជិក)' }
         ];
         const ROLE_DEFAULTS = {
             manager: Object.fromEntries(PERMS.map(p => [p.key, true])),
@@ -3895,19 +3948,19 @@
             return JSON.parse(new TextDecoder().decode(pt));
         }
         async function exportBackup() {
-            if (!need('settings')) return;
+            if (!need('settings|reset')) return false;
             const data = { app: 'angkor-cafe-pos', version: 3, exportedAt: new Date().toISOString(), kv: {}, archive: {} };
             [...STORAGE_KEYS, ...BACKUP_EXTRA_KEYS].forEach(k => { const v = loadJSON(k, null); if (v !== null) data.kv[k] = v; });
             for (const e of archiveIndex()) data.archive[e.m] = await archiveLoad(e.m);
             let out = data, enc = false;
             if (hasSubtle) {
                 const pass = prompt('ពាក្យសម្ងាត់ការពារ Backup (យ៉ាងតិច ៨ តួ)\nទុកទទេ = មិនការពារ (មិនណែនាំ — ឯកសារមាន PIN, Token, ទិន្នន័យលក់)');
-                if (pass === null) return;
+                if (pass === null) return false;
                 if (pass) {
-                    if (pass.length < 8) { showToast("ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៨ តួ", "warning"); return; }
-                    if (prompt('បញ្ជាក់ពាក្យសម្ងាត់ម្តងទៀត') !== pass) { showToast("ពាក្យសម្ងាត់មិនដូចគ្នា", "warning"); return; }
+                    if (pass.length < 8) { showToast("ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៨ តួ", "warning"); return false; }
+                    if (prompt('បញ្ជាក់ពាក្យសម្ងាត់ម្តងទៀត') !== pass) { showToast("ពាក្យសម្ងាត់មិនដូចគ្នា", "warning"); return false; }
                     out = await encryptJSON(data, pass); enc = true;
-                } else if (!confirm('Export ដោយគ្មានការការពារ?')) return;
+                } else if (!confirm('Export ដោយគ្មានការការពារ?')) return false;
             }
             audit('Export Backup', enc ? 'បានអ៊ិនគ្រីប' : '⚠️ មិនបានអ៊ិនគ្រីប', true);
             const blob = new Blob([JSON.stringify(out)], { type: 'application/json' });
@@ -3918,6 +3971,7 @@
             setTimeout(() => URL.revokeObjectURL(a.href), 5000);
             saveJSON('cafe_last_backup', Date.now());
             showToast(`បាន Export backup (${(blob.size / 1048576).toFixed(2)} MB)!`, "success");
+            return true;
         }
         function importBackup(input) {
             if (!need('settings')) return;
@@ -3999,7 +4053,7 @@
             if (e.key === 'Enter' && isOpen('modal-checkout')) { e.preventDefault(); confirmCheckout(); return; }
             if (e.key === 'Enter' && isOpen('modal-customization') && document.activeElement.tagName !== 'BUTTON') { confirmAddToCart(); return; }
             if (e.key === 'Escape') editingCartId = null;
-            if (e.key === 'Escape') ['modal-checkout', 'modal-mixed', 'modal-split', 'modal-customer', 'modal-purchase', 'modal-count', 'modal-customization', 'modal-khqr', 'modal-receipt', 'modal-table-transfer', 'modal-ingredient', 'modal-menu', 'modal-staff', 'modal-dashboard'].forEach(closeModal);
+            if (e.key === 'Escape') ['modal-checkout', 'modal-mixed', 'modal-split', 'modal-customer', 'modal-purchase', 'modal-count', 'modal-customization', 'modal-khqr', 'modal-receipt', 'modal-table-transfer', 'modal-ingredient', 'modal-menu', 'modal-staff', 'modal-dashboard', 'modal-reset'].forEach(closeModal);
         });
 
         // ==================== NUMBER FIELDS WORK WITH THE KHMER KEYBOARD ====================
@@ -4747,6 +4801,142 @@
             closeModal('modal-forgot');
             selectLoginStaff(user.id);
             showToast(`បានកំណត់ PIN ថ្មីសម្រាប់ ${user.name} — សូម Login ហើយបង្កើតលេខកូដសង្គ្រោះថ្មី`, "success");
+        }
+
+        // ==================== RESET / DELETE DATA (manager, PIN, auto-backup, audit) ====================
+        const localDay = ts => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+        let resetCounts = { sales: 0 };
+        function openResetModal() {
+            if (!need('reset')) return;
+            ['rs-sales', 'rs-stock', 'rs-stocklog', 'rs-shifts', 'rs-voids', 'rs-cust', 'rs-factory', 'rs-cloud'].forEach(id => document.getElementById(id).checked = false);
+            document.querySelector('input[name="rs-cust-mode"][value="points"]').checked = true;
+            ['rs-confirm', 'rs-pin', 'rs-reason'].forEach(id => document.getElementById(id).value = '');
+            const today = localDay(Date.now());
+            const first = salesHistory.length ? localDay(salesHistory.reduce((m, s) => s.timestamp < m ? s.timestamp : m, salesHistory[0].timestamp)) : today;
+            const arch = archiveIndex();
+            document.getElementById('rs-from').value = arch.length ? arch[0].m + '-01' : first;
+            document.getElementById('rs-to').value = today;
+            document.getElementById('rs-cloud-row').classList.toggle('hidden', !cloudOn());
+            openModal('modal-reset');
+            resetPreview();
+        }
+        async function countSalesInRange(from, to) {
+            let n = 0, total = 0;
+            const inR = s => { const d = localDay(s.timestamp); return d >= from && d <= to; };
+            salesHistory.forEach(s => { if (inR(s)) { n++; total += Number(s.totalUSD) || 0; } });
+            for (const e of archiveIndex()) {
+                if (e.m < from.slice(0, 7) || e.m > to.slice(0, 7)) continue;
+                (await archiveLoad(e.m)).forEach(s => { if (inR(s)) { n++; total += Number(s.totalUSD) || 0; } });
+            }
+            return { n, total };
+        }
+        let resetPreviewSeq = 0;
+        async function resetPreview() {
+            const v = id => document.getElementById(id).checked;
+            const factory = v('rs-factory');
+            ['rs-sales', 'rs-stock', 'rs-stocklog', 'rs-shifts', 'rs-voids', 'rs-cust'].forEach(id => { const el = document.getElementById(id); el.disabled = factory; if (factory) el.checked = true; });
+            document.getElementById('rs-from').disabled = document.getElementById('rs-to').disabled = factory;
+            const from = document.getElementById('rs-from').value, to = document.getElementById('rs-to').value;
+            const seq = ++resetPreviewSeq;
+            let sales = { n: 0, total: 0 };
+            if (factory) { sales.n = salesHistory.length + archiveIndex().reduce((t, e) => t + e.n, 0); }
+            else if (from && to && from <= to) sales = await countSalesInRange(from, to);
+            if (seq !== resetPreviewSeq) return;
+            resetCounts.sales = sales.n;
+            const custMode = document.querySelector('input[name="rs-cust-mode"]:checked').value;
+            document.getElementById('rs-sales-info').innerText = factory ? `ទាំងអស់ ${sales.n} វិក្កយបត្រ` : (from && to && from <= to ? `${sales.n} វិក្កយបត្រ • ${fmtUSD(sales.total)}` : 'ជ្រើសថ្ងៃឲ្យត្រឹមត្រូវ');
+            document.getElementById('rs-stock-info').innerText = `(${rawInventory.length} មុខ)`;
+            document.getElementById('rs-stocklog-info').innerText = `(${purchases.length + stockCounts.length} កំណត់ត្រា)`;
+            document.getElementById('rs-shifts-info').innerText = `(${shiftReports.length} វេន)`;
+            document.getElementById('rs-voids-info').innerText = `(${voidLog.length} កំណត់ត្រា)`;
+            document.getElementById('rs-cust-info').innerText = `(${customers.length} នាក់)`;
+            const parts = [];
+            if (v('rs-sales') && sales.n) parts.push(`🧾 ${sales.n} វិក្កយបត្រ${factory ? '' : ` (${from} → ${to})`}`);
+            if (v('rs-stock')) parts.push('📦 ស្តុក = 0');
+            if (v('rs-stocklog')) parts.push('🧮 ប្រវត្តិទិញចូល/រាប់ស្តុក');
+            if (v('rs-shifts')) parts.push(`💰 ${shiftReports.length} វេន`);
+            if (v('rs-voids')) parts.push(`🚫 ${voidLog.length} Void`);
+            if (v('rs-cust')) parts.push(custMode === 'delete' ? `⭐ លុបសមាជិក ${customers.length}` : '⭐ ពិន្ទុ = 0');
+            if (factory) parts.push(`🍽️ តុដែលកំពុងបើក ${Object.keys(tablesState).filter(k => (tablesState[k].cart || []).length).length}`);
+            const sumEl = document.getElementById('rs-summary');
+            sumEl.innerHTML = parts.length ? `<b>នឹងលុប៖</b> ${parts.map(esc).join(' • ')}${cloudOn() ? `<br>☁️ Google Sheet៖ <b>${v('rs-cloud') ? 'លុបដែរ' : 'រក្សាទុក'}</b>` : ''}` : '<span class="text-slate-400">សូមជ្រើសទិន្នន័យដែលចង់លុប</span>';
+            const ok = parts.length && document.getElementById('rs-confirm').value.trim().toUpperCase() === 'RESET' && (!v('rs-sales') || factory || (from && to && from <= to));
+            document.getElementById('rs-go').disabled = !ok;
+        }
+        let resetBusy = false;
+        async function runReset() {
+            if (resetBusy || !need('reset')) return;
+            const v = id => document.getElementById(id).checked;
+            const factory = v('rs-factory');
+            const opt = { sales: v('rs-sales') || factory, stock: v('rs-stock') || factory, stocklog: v('rs-stocklog') || factory, shifts: v('rs-shifts') || factory,
+                voids: v('rs-voids') || factory, cust: (v('rs-cust') || factory) ? (factory ? 'delete' : document.querySelector('input[name="rs-cust-mode"]:checked').value) : '',
+                factory, cloud: cloudOn() && v('rs-cloud'), from: document.getElementById('rs-from').value, to: document.getElementById('rs-to').value };
+            if (document.getElementById('rs-confirm').value.trim().toUpperCase() !== 'RESET') return;
+            const reason = document.getElementById('rs-reason').value.trim();
+            if (!reason) { showToast("សូមបញ្ចូលមូលហេតុ", "warning"); return; }
+            if (Date.now() < approveLockUntil) { showToast("បញ្ចូល PIN ខុសច្រើនដង — សូមរង់ចាំ", "warning"); return; }
+            resetBusy = true;
+            try {
+                const pin = document.getElementById('rs-pin').value;
+                if (!(await verifyPin(currentUser, pin))) {
+                    approveFails++; document.getElementById('rs-pin').value = '';
+                    if (approveFails >= 5) { approveLockUntil = Date.now() + 60000; approveFails = 0; }
+                    audit('Reset ទិន្នន័យ — PIN ខុស', reason, true);
+                    showToast("PIN មិនត្រឹមត្រូវ", "error"); return;
+                }
+                approveFails = 0;
+                showToast("សូម Backup ទិន្នន័យជាមុន...", "info");
+                if (!(await exportBackup())) { showToast("បានបោះបង់ — មិនបានលុបអ្វីទេ (ត្រូវការ Backup ជាមុន)", "warning"); return; }
+                const done = [];
+                // --- sales ---
+                let deletedIds = new Set();
+                if (opt.sales) {
+                    const inR = s => opt.factory || (localDay(s.timestamp) >= opt.from && localDay(s.timestamp) <= opt.to);
+                    salesHistory.filter(inR).forEach(s => deletedIds.add(s.id));
+                    salesHistory = salesHistory.filter(s => !inR(s));
+                    saveSalesHistory();
+                    let idx = archiveIndex();
+                    for (const e of [...idx]) {
+                        if (!opt.factory && (e.m < opt.from.slice(0, 7) || e.m > opt.to.slice(0, 7))) continue;
+                        const list = await archiveLoad(e.m);
+                        list.filter(inR).forEach(s => deletedIds.add(s.id));
+                        const keep = list.filter(s => !inR(s));
+                        if (Store.mode === 'idb') await idbTx('archive', 'readwrite', st => { if (keep.length) st.put(keep, e.m); else st.delete(e.m); });
+                        archiveMem[e.m] = keep;
+                        if (keep.length) e.n = keep.length; else idx = idx.filter(x => x.m !== e.m);
+                    }
+                    saveJSON('cafe_archive_index', idx);
+                    // unsent sales of deleted bills never reach the sheet when the sheet is cleaned too
+                    if (opt.cloud) outbox = outbox.filter(ev => !((ev.type === 'sale' && deletedIds.has(ev.payload.id)) || (ev.type === 'voidBill' && deletedIds.has(ev.payload.saleId))));
+                    done.push(`${deletedIds.size} វិក្កយបត្រ` + (opt.factory ? '' : ` (${opt.from}→${opt.to})`));
+                }
+                if (opt.stock) {
+                    rawInventory.forEach(r => { r.stock = 0; r.used = 0; r.initialStock = 0; });
+                    saveRawInventory();
+                    if (cloudOn()) { outbox = outbox.filter(e => !['restock', 'inventorySet', 'ingredientNew'].includes(e.type)); enqueue('inventorySet', { items: rawInventory }); }
+                    done.push('ស្តុក = 0');
+                }
+                if (opt.stocklog) { purchases = []; stockCounts = []; saveJSON('cafe_purchases', purchases); saveJSON('cafe_stock_counts', stockCounts); done.push('ប្រវត្តិទិញចូល/រាប់ស្តុក'); }
+                if (opt.shifts) { const n = shiftReports.length; shiftReports = []; saveJSON('cafe_shift_reports', shiftReports); done.push(`${n} វេន`); }
+                if (opt.voids) { const n = voidLog.length; voidLog = []; saveVoidLog(); done.push(`${n} Void`); }
+                if (opt.cust === 'delete') { const n = customers.length; customers = []; saveJSON('cafe_customers', customers); done.push(`លុបសមាជិក ${n}`); }
+                else if (opt.cust === 'points') { customers.forEach(c => c.points = 0); saveJSON('cafe_customers', customers); done.push('ពិន្ទុសមាជិក = 0'); }
+                if (opt.factory) {
+                    tablesState = {}; saveTablesState();
+                    removeKey('cafe_queue');
+                    if (opt.cloud) outbox = outbox.filter(e => !['sale', 'voidBill', 'voidItem', 'shift', 'restock'].includes(e.type));
+                    done.push('តុដែលបើក');
+                }
+                if (opt.cloud) {
+                    saveOutbox();
+                    enqueue('purge', { sales: opt.sales, from: opt.factory ? '' : opt.from, to: opt.factory ? '' : opt.to, all: opt.factory,
+                        shifts: opt.shifts, voids: opt.voids, stocklog: opt.stocklog });
+                } else if (cloudOn()) saveOutbox();
+                audit(opt.factory ? '🔥 Factory Reset' : 'លុប / Reset ទិន្នន័យ', `${done.join(', ')} • Sheet: ${opt.cloud ? 'លុបដែរ' : 'រក្សាទុក'} • មូលហេតុ: ${reason}`, true);
+                closeModal('modal-reset');
+                [renderTableGrid, renderRawInventory, renderCustomers, renderStorageUsage].forEach(f => { try { if (typeof f === 'function') f(); } catch (e) { } });
+                showToast(`បានលុប៖ ${done.join(', ')}`, "success");
+            } finally { resetBusy = false; }
         }
 
         // ==================== OWNER DASHBOARD LINK ====================
